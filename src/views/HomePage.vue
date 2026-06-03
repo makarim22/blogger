@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/vue-query'
 import { fetchMovies, fetchBooks, deleteMovie, deleteBook } from '../services/api'
 import { useAuthStore } from '../stores/auth'
@@ -11,6 +11,11 @@ const queryClient = useQueryClient()
 const authStore = useAuthStore()
 const activeTab = ref<'movies' | 'books'>('movies')
 const showModal = ref(false)
+
+// Controls State
+const searchQuery = ref('')
+const sortBy = ref<'newest' | 'oldest' | 'highest' | 'lowest'>('newest')
+const filterRating = ref<'all' | '5' | '4' | '3' | '2' | '1'>('all')
 
 useHead({
   title: () => `My Media Log | ${activeTab.value === 'movies' ? 'Movies' : 'Books'}`,
@@ -57,6 +62,10 @@ const deleteBookMutation = useMutation({
 
 const handleTabChange = (tab: 'movies' | 'books') => {
   activeTab.value = tab
+  // Reset filters when switching tabs
+  searchQuery.value = ''
+  sortBy.value = 'newest'
+  filterRating.value = 'all'
 }
 
 const handleDelete = (id: string, type: 'movies' | 'books') => {
@@ -71,6 +80,56 @@ const handleDelete = (id: string, type: 'movies' | 'books') => {
 const renderStars = (rating: number) => {
   return '★'.repeat(rating) + '☆'.repeat(5 - rating)
 }
+
+// Helper to process lists
+const processList = (list: any[], type: 'movies' | 'books') => {
+  let result = [...list]
+  
+  if (filterRating.value !== 'all') {
+    const ratingValue = parseInt(filterRating.value)
+    result = result.filter((item) => item.rating === ratingValue)
+  }
+
+  if (searchQuery.value.trim()) {
+    const query = searchQuery.value.toLowerCase()
+    result = result.filter((item) => {
+      if (type === 'movies') {
+        return item.title.toLowerCase().includes(query) || item.director.toLowerCase().includes(query)
+      } else {
+        return item.title.toLowerCase().includes(query) || item.author.toLowerCase().includes(query)
+      }
+    })
+  }
+
+  result.sort((a, b) => {
+    if (sortBy.value === 'newest' || sortBy.value === 'oldest') {
+      const dateA = type === 'movies' ? new Date(a.watchDate) : new Date(a.readDate)
+      const dateB = type === 'movies' ? new Date(b.watchDate) : new Date(b.readDate)
+      return sortBy.value === 'newest' ? dateB.getTime() - dateA.getTime() : dateA.getTime() - dateB.getTime()
+    } else if (sortBy.value === 'highest') {
+      return b.rating - a.rating
+    } else {
+      return a.rating - b.rating
+    }
+  })
+
+  return result
+}
+
+const processedMovies = computed(() => {
+  if (activeTab.value !== 'movies') return []
+  return processList(movies.value || [], 'movies')
+})
+
+const processedBooks = computed(() => {
+  if (activeTab.value !== 'books') return []
+  return processList(books.value || [], 'books')
+})
+
+const isEmpty = computed(() => {
+  if (activeTab.value === 'movies') return processedMovies.value.length === 0
+  return processedBooks.value.length === 0
+})
 </script>
 
 <template>
@@ -85,6 +144,32 @@ const renderStars = (rating: number) => {
       <button :class="{ active: activeTab === 'books' }" @click="handleTabChange('books')">Books</button>
     </div>
 
+    <!-- Controls Toolbar -->
+    <div class="toolbar glass-panel">
+      <div class="search-box">
+        <span class="icon">🔍</span>
+        <input type="text" v-model="searchQuery" placeholder="Search title or creator..." />
+      </div>
+      
+      <div class="filters">
+        <select v-model="filterRating">
+          <option value="all">All Ratings</option>
+          <option value="5">5 Stars Only</option>
+          <option value="4">4 Stars</option>
+          <option value="3">3 Stars</option>
+          <option value="2">2 Stars</option>
+          <option value="1">1 Star</option>
+        </select>
+        
+        <select v-model="sortBy">
+          <option value="newest">Newest First</option>
+          <option value="oldest">Oldest First</option>
+          <option value="highest">Highest Rated</option>
+          <option value="lowest">Lowest Rated</option>
+        </select>
+      </div>
+    </div>
+
     <!-- Loading State -->
     <div v-if="(activeTab === 'movies' && loadingMovies) || (activeTab === 'books' && loadingBooks)" class="loading-state">
       <div class="spinner"></div>
@@ -92,16 +177,16 @@ const renderStars = (rating: number) => {
     </div>
     
     <!-- Empty State -->
-    <div v-else-if="(activeTab === 'movies' && movies?.length === 0) || (activeTab === 'books' && books?.length === 0)" class="empty-state glass-panel">
+    <div v-else-if="isEmpty" class="empty-state glass-panel">
       <h2>No {{ activeTab }} Found</h2>
-      <p>Your log is currently empty.</p>
+      <p>Try adjusting your filters or add a new log.</p>
     </div>
 
     <!-- Grid State -->
     <div v-else class="media-grid-container">
       <TransitionGroup name="list" tag="div" class="media-grid">
         <template v-if="activeTab === 'movies'">
-          <div class="media-card glass-panel" v-for="movie in movies" :key="movie.id">
+          <div class="media-card glass-panel" v-for="movie in processedMovies" :key="movie.id">
             <img v-if="movie.posterUrl" :src="movie.posterUrl" class="media-cover" alt="Movie Poster" />
             <div class="media-content">
               <h3>{{ movie.title }} ({{ movie.releaseYear }})</h3>
@@ -118,7 +203,7 @@ const renderStars = (rating: number) => {
         </template>
         
         <template v-else>
-          <div class="media-card glass-panel" v-for="book in books" :key="book.id">
+          <div class="media-card glass-panel" v-for="book in processedBooks" :key="book.id">
             <img v-if="book.coverUrl" :src="book.coverUrl" class="media-cover" alt="Book Cover" />
             <div class="media-content">
               <h3>{{ book.title }} ({{ book.publishYear }})</h3>
@@ -162,14 +247,14 @@ const renderStars = (rating: number) => {
   display: flex;
   justify-content: center;
   gap: 16px;
-  margin-bottom: 40px;
+  margin-bottom: 24px;
 }
 .tabs button {
   padding: 10px 24px;
   border-radius: 999px;
-  border: 1px solid rgba(255,255,255,0.1);
+  border: 1px solid var(--glass-border);
   background: transparent;
-  color: white;
+  color: var(--color-text-main);
   cursor: pointer;
   font-size: 1.1rem;
   transition: all 0.3s ease;
@@ -177,7 +262,61 @@ const renderStars = (rating: number) => {
 .tabs button.active {
   background: var(--color-primary);
   border-color: var(--color-primary);
+  color: #fff;
   font-weight: bold;
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  margin-bottom: 40px;
+}
+.search-box {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 250px;
+  background: var(--card-bg-fallback);
+  border: 1px solid var(--glass-border);
+  border-radius: 8px;
+  padding: 8px 12px;
+}
+.search-box .icon {
+  margin-right: 8px;
+  opacity: 0.7;
+}
+.search-box input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: var(--color-text-main);
+  font-family: inherit;
+  font-size: 1rem;
+}
+.search-box input:focus {
+  outline: none;
+}
+.filters {
+  display: flex;
+  gap: 12px;
+}
+.filters select {
+  background: var(--card-bg-fallback);
+  border: 1px solid var(--glass-border);
+  color: var(--color-text-main);
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+.filters select:focus {
+  outline: none;
+  border-color: var(--color-primary);
 }
 
 .media-grid-container {
@@ -210,13 +349,13 @@ const renderStars = (rating: number) => {
   flex-direction: column;
   overflow: hidden;
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--card-bg-fallback);
 }
 .media-cover {
   width: 100%;
   height: 360px;
   object-fit: cover;
-  border-bottom: 1px solid rgba(255,255,255,0.1);
+  border-bottom: 1px solid var(--glass-border);
 }
 .media-content {
   padding: 20px;
@@ -257,7 +396,7 @@ const renderStars = (rating: number) => {
 }
 .btn-danger {
   padding: 6px 12px;
-  background: rgba(239, 68, 68, 0.2);
+  background: rgba(239, 68, 68, 0.1);
   color: #ef4444;
   border: 1px solid rgba(239, 68, 68, 0.4);
   border-radius: 4px;
@@ -266,7 +405,7 @@ const renderStars = (rating: number) => {
   transition: background 0.2s;
 }
 .btn-danger:hover:not(:disabled) {
-  background: rgba(239, 68, 68, 0.4);
+  background: rgba(239, 68, 68, 0.2);
 }
 .btn-danger:disabled {
   opacity: 0.5;

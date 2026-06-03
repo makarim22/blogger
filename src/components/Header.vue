@@ -2,9 +2,11 @@
 import { RouterLink, useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import { toast } from 'vue3-toastify'
+import { useTheme } from '../composables/useTheme'
 
 const router = useRouter()
 const authStore = useAuthStore()
+const { isDark, toggleTheme } = useTheme()
 
 const handleLogout = () => {
   authStore.logout()
@@ -15,14 +17,18 @@ const handleLogout = () => {
 
 <template>
   <header class="header glass-panel">
-    <div class="container header-content">
+    <div class="header-content container">
       <RouterLink to="/" class="logo">
-        <span class="text-gradient">Nex</span>Blog
+        <span class="text-gradient">Media</span>Log
       </RouterLink>
       <nav class="nav-links">
         <RouterLink to="/" class="nav-link">Home</RouterLink>
+        <RouterLink to="/stats" class="nav-link">Stats</RouterLink>
+        <button class="theme-toggle" @click="toggleTheme" :title="isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'">
+          {{ isDark ? '☀️' : '🌙' }}
+        </button>
         <RouterLink v-if="!authStore.isLoggedIn" to="/login" class="btn-primary">Admin Login</RouterLink>
-        <button v-else @click="handleLogout" class="btn-primary" style="background: rgba(255,255,255,0.1)">Logout</button>
+        <button v-else @click="handleLogout" class="btn-primary" style="background: rgba(255,255,255,0.1); color: var(--color-text-main);">Logout</button>
       </nav>
     </div>
   </header>
@@ -31,41 +37,50 @@ const handleLogout = () => {
 <style scoped>
 .header {
   position: sticky;
-  top: 16px;
-  z-index: 100;
-  margin: 16px auto;
-  width: calc(100% - 32px);
-  max-width: 1200px;
-  border-radius: 100px; /* Pill shape */
-  padding: 12px 24px;
+  top: 0;
+  z-index: 50;
+  border-radius: 0;
+  border-left: none;
+  border-right: none;
+  border-top: none;
 }
-
 .header-content {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  height: 70px;
 }
-
 .logo {
   font-family: var(--font-heading);
-  font-size: 1.5rem;
   font-weight: 800;
-  letter-spacing: -0.5px;
+  font-size: 1.5rem;
 }
-
 .nav-links {
   display: flex;
-  gap: 24px;
   align-items: center;
+  gap: 24px;
 }
-
 .nav-link {
   font-weight: 500;
+  transition: color 0.2s;
   color: var(--color-text-main);
-  transition: color 0.2s ease;
 }
-
 .nav-link:hover {
   color: var(--color-primary);
+}
+.theme-toggle {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+.theme-toggle:hover {
+  background: var(--glass-border);
 }
 </style>

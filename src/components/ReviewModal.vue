@@ -1,9 +1,12 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useMutation, useQueryClient } from '@tanstack/vue-query'
 import { createMovie, createBook, uploadImage } from '../services/api'
+import { toast } from 'vue3-toastify'
 
 const props = defineProps<{ type: 'movies' | 'books' }>()
-const emit = defineEmits(['close', 'refresh'])
+const emit = defineEmits(['close'])
+const queryClient = useQueryClient()
 
 const title = ref('')
 const creator = ref('') // Director or Author
@@ -11,8 +14,6 @@ const year = ref<number>(new Date().getFullYear())
 const rating = ref(5)
 const review = ref('')
 const selectedFile = ref<File | null>(null)
-const loading = ref(false)
-const errorMsg = ref('')
 
 const handleFileChange = (e: Event) => {
   const target = e.target as HTMLInputElement
@@ -21,17 +22,40 @@ const handleFileChange = (e: Event) => {
   }
 }
 
+const movieMutation = useMutation({
+  mutationFn: createMovie,
+  onSuccess: () => {
+    toast.success('Movie logged successfully!')
+    queryClient.invalidateQueries({ queryKey: ['movies'] })
+    emit('close')
+  },
+  onError: (error: Error) => {
+    toast.error(error.message || 'Failed to log movie')
+  }
+})
+
+const bookMutation = useMutation({
+  mutationFn: createBook,
+  onSuccess: () => {
+    toast.success('Book logged successfully!')
+    queryClient.invalidateQueries({ queryKey: ['books'] })
+    emit('close')
+  },
+  onError: (error: Error) => {
+    toast.error(error.message || 'Failed to log book')
+  }
+})
+
 const handleSubmit = async () => {
-  loading.value = true
-  errorMsg.value = ''
   try {
     let imageUrl = ''
     if (selectedFile.value) {
+      toast.info('Uploading image...')
       imageUrl = await uploadImage(selectedFile.value)
     }
 
     if (props.type === 'movies') {
-      await createMovie({
+      movieMutation.mutate({
         title: title.value,
         director: creator.value,
         releaseYear: year.value,
@@ -41,7 +65,7 @@ const handleSubmit = async () => {
         posterUrl: imageUrl
       })
     } else {
-      await createBook({
+      bookMutation.mutate({
         title: title.value,
         author: creator.value,
         publishYear: year.value,
@@ -51,19 +75,17 @@ const handleSubmit = async () => {
         coverUrl: imageUrl
       })
     }
-    emit('refresh')
-    emit('close')
   } catch (error: any) {
-    errorMsg.value = error.message || 'Error saving review'
-  } finally {
-    loading.value = false
+    toast.error(error.message || 'Error processing request')
   }
 }
+
+const isPending = movieMutation.isPending.value || bookMutation.isPending.value
 </script>
 
 <template>
   <div class="modal-overlay" @click.self="emit('close')">
-    <div class="modal-content glass-panel">
+    <div class="modal-content glass-panel animate-fade-in">
       <h2>Log a {{ props.type === 'movies' ? 'Movie' : 'Book' }}</h2>
       
       <form @submit.prevent="handleSubmit" class="modal-form">
@@ -98,12 +120,10 @@ const handleSubmit = async () => {
           <input type="file" accept="image/*" @change="handleFileChange" />
         </div>
         
-        <div v-if="errorMsg" class="error">{{ errorMsg }}</div>
-        
         <div class="actions">
           <button type="button" @click="emit('close')" class="btn-cancel">Cancel</button>
-          <button type="submit" class="btn-primary" :disabled="loading">
-            {{ loading ? 'Saving...' : 'Save Log' }}
+          <button type="submit" class="btn-primary" :disabled="isPending">
+            {{ isPending ? 'Saving...' : 'Save Log' }}
           </button>
         </div>
       </form>
@@ -119,6 +139,7 @@ const handleSubmit = async () => {
   right: 0;
   bottom: 0;
   background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -134,6 +155,7 @@ const handleSubmit = async () => {
   box-shadow: 0 10px 40px rgba(0,0,0,0.5);
   max-height: 90vh;
   overflow-y: auto;
+  transform-origin: center;
 }
 
 .modal-content h2 {
@@ -173,6 +195,7 @@ input, textarea {
   color: white;
   font-family: inherit;
   font-size: 1rem;
+  transition: border-color 0.2s;
 }
 
 input:focus, textarea:focus {
@@ -194,14 +217,15 @@ input:focus, textarea:focus {
   border: 1px solid rgba(255,255,255,0.2);
   border-radius: 8px;
   cursor: pointer;
+  transition: background 0.2s;
 }
 
 .btn-cancel:hover {
   background: rgba(255,255,255,0.1);
 }
 
-.error {
-  color: #ef4444;
-  font-size: 0.9rem;
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 </style>

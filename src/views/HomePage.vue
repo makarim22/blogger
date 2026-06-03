@@ -1,43 +1,71 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
-import { fetchMovies, fetchBooks, deleteMovie, deleteBook, type MovieReview, type BookReview } from '../services/api'
-import { isLoggedIn } from '../services/auth'
+import { ref } from 'vue'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/vue-query'
+import { fetchMovies, fetchBooks, deleteMovie, deleteBook } from '../services/api'
+import { useAuthStore } from '../stores/auth'
 import ReviewModal from '../components/ReviewModal.vue'
+import { toast } from 'vue3-toastify'
+import { useHead } from '@unhead/vue'
 
+const queryClient = useQueryClient()
+const authStore = useAuthStore()
 const activeTab = ref<'movies' | 'books'>('movies')
-const movies = ref<MovieReview[]>([])
-const books = ref<BookReview[]>([])
-const loading = ref(true)
-
 const showModal = ref(false)
 
-const loadData = async () => {
-  loading.value = true
-  if (activeTab.value === 'movies') {
-    movies.value = await fetchMovies()
-  } else {
-    books.value = await fetchBooks()
-  }
-  loading.value = false
-}
+useHead({
+  title: () => `My Media Log | ${activeTab.value === 'movies' ? 'Movies' : 'Books'}`,
+  meta: [
+    { name: 'description', content: 'A beautifully designed personal media log for movies and books.' },
+  ],
+})
 
-onMounted(() => {
-  loadData()
+// Queries
+const { data: movies, isLoading: loadingMovies } = useQuery({
+  queryKey: ['movies'],
+  queryFn: fetchMovies,
+  staleTime: 60000,
+})
+
+const { data: books, isLoading: loadingBooks } = useQuery({
+  queryKey: ['books'],
+  queryFn: fetchBooks,
+  staleTime: 60000,
+})
+
+// Mutations
+const deleteMovieMutation = useMutation({
+  mutationFn: deleteMovie,
+  onSuccess: () => {
+    toast.success('Movie deleted successfully')
+    queryClient.invalidateQueries({ queryKey: ['movies'] })
+  },
+  onError: (error: Error) => {
+    toast.error(error.message || 'Failed to delete movie')
+  }
+})
+
+const deleteBookMutation = useMutation({
+  mutationFn: deleteBook,
+  onSuccess: () => {
+    toast.success('Book deleted successfully')
+    queryClient.invalidateQueries({ queryKey: ['books'] })
+  },
+  onError: (error: Error) => {
+    toast.error(error.message || 'Failed to delete book')
+  }
 })
 
 const handleTabChange = (tab: 'movies' | 'books') => {
   activeTab.value = tab
-  loadData()
 }
 
-const handleDelete = async (id: string, type: 'movies' | 'books') => {
+const handleDelete = (id: string, type: 'movies' | 'books') => {
   if (!confirm('Are you sure you want to delete this log?')) return
   if (type === 'movies') {
-    await deleteMovie(id)
+    deleteMovieMutation.mutate(id)
   } else {
-    await deleteBook(id)
+    deleteBookMutation.mutate(id)
   }
-  loadData()
 }
 
 const renderStars = (rating: number) => {
@@ -57,57 +85,62 @@ const renderStars = (rating: number) => {
       <button :class="{ active: activeTab === 'books' }" @click="handleTabChange('books')">Books</button>
     </div>
 
-    <div v-if="loading" class="loading-state">
+    <!-- Loading State -->
+    <div v-if="(activeTab === 'movies' && loadingMovies) || (activeTab === 'books' && loadingBooks)" class="loading-state">
       <div class="spinner"></div>
       <p>Loading {{ activeTab }}...</p>
     </div>
     
-    <div v-else-if="(activeTab === 'movies' && movies.length === 0) || (activeTab === 'books' && books.length === 0)" class="empty-state glass-panel">
+    <!-- Empty State -->
+    <div v-else-if="(activeTab === 'movies' && movies?.length === 0) || (activeTab === 'books' && books?.length === 0)" class="empty-state glass-panel">
       <h2>No {{ activeTab }} Found</h2>
       <p>Your log is currently empty.</p>
     </div>
 
-    <div v-else class="media-grid">
-      <template v-if="activeTab === 'movies'">
-        <div class="media-card glass-panel animate-fade-in" v-for="movie in movies" :key="movie.id">
-          <img v-if="movie.posterUrl" :src="movie.posterUrl" class="media-cover" alt="Movie Poster" />
-          <div class="media-content">
-            <h3>{{ movie.title }} ({{ movie.releaseYear }})</h3>
-            <p class="meta">Dir: {{ movie.director }}</p>
-            <p class="stars">{{ renderStars(movie.rating) }}</p>
-            <p class="date">Watched: {{ new Date(movie.watchDate).toLocaleDateString() }}</p>
-            <p class="review-text">{{ movie.review }}</p>
-            
-            <div class="admin-actions" v-if="isLoggedIn">
-              <button @click="handleDelete(movie.id, 'movies')" class="btn-danger">Delete</button>
+    <!-- Grid State -->
+    <div v-else class="media-grid-container">
+      <TransitionGroup name="list" tag="div" class="media-grid">
+        <template v-if="activeTab === 'movies'">
+          <div class="media-card glass-panel" v-for="movie in movies" :key="movie.id">
+            <img v-if="movie.posterUrl" :src="movie.posterUrl" class="media-cover" alt="Movie Poster" />
+            <div class="media-content">
+              <h3>{{ movie.title }} ({{ movie.releaseYear }})</h3>
+              <p class="meta">Dir: {{ movie.director }}</p>
+              <p class="stars">{{ renderStars(movie.rating) }}</p>
+              <p class="date">Watched: {{ new Date(movie.watchDate).toLocaleDateString() }}</p>
+              <p class="review-text">{{ movie.review }}</p>
+              
+              <div class="admin-actions" v-if="authStore.isLoggedIn">
+                <button @click="handleDelete(movie.id, 'movies')" class="btn-danger" :disabled="deleteMovieMutation.isPending.value">Delete</button>
+              </div>
             </div>
           </div>
-        </div>
-      </template>
-      
-      <template v-else>
-        <div class="media-card glass-panel animate-fade-in" v-for="book in books" :key="book.id">
-          <img v-if="book.coverUrl" :src="book.coverUrl" class="media-cover" alt="Book Cover" />
-          <div class="media-content">
-            <h3>{{ book.title }} ({{ book.publishYear }})</h3>
-            <p class="meta">By: {{ book.author }}</p>
-            <p class="stars">{{ renderStars(book.rating) }}</p>
-            <p class="date">Read: {{ new Date(book.readDate).toLocaleDateString() }}</p>
-            <p class="review-text">{{ book.review }}</p>
-            
-            <div class="admin-actions" v-if="isLoggedIn">
-              <button @click="handleDelete(book.id, 'books')" class="btn-danger">Delete</button>
+        </template>
+        
+        <template v-else>
+          <div class="media-card glass-panel" v-for="book in books" :key="book.id">
+            <img v-if="book.coverUrl" :src="book.coverUrl" class="media-cover" alt="Book Cover" />
+            <div class="media-content">
+              <h3>{{ book.title }} ({{ book.publishYear }})</h3>
+              <p class="meta">By: {{ book.author }}</p>
+              <p class="stars">{{ renderStars(book.rating) }}</p>
+              <p class="date">Read: {{ new Date(book.readDate).toLocaleDateString() }}</p>
+              <p class="review-text">{{ book.review }}</p>
+              
+              <div class="admin-actions" v-if="authStore.isLoggedIn">
+                <button @click="handleDelete(book.id, 'books')" class="btn-danger" :disabled="deleteBookMutation.isPending.value">Delete</button>
+              </div>
             </div>
           </div>
-        </div>
-      </template>
+        </template>
+      </TransitionGroup>
     </div>
 
     <!-- Floating Action Button -->
-    <button v-if="isLoggedIn" class="fab" @click="showModal = true">+</button>
+    <button v-if="authStore.isLoggedIn" class="fab" @click="showModal = true">+</button>
     
     <!-- Modal -->
-    <ReviewModal v-if="showModal" @close="showModal = false" @refresh="loadData" :type="activeTab" />
+    <ReviewModal v-if="showModal" @close="showModal = false" :type="activeTab" />
   </div>
 </template>
 
@@ -147,11 +180,29 @@ const renderStars = (rating: number) => {
   font-weight: bold;
 }
 
+.media-grid-container {
+  padding-bottom: 80px;
+}
+
 .media-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 24px;
-  padding-bottom: 80px;
+}
+
+/* Transition Group Animations */
+.list-move,
+.list-enter-active,
+.list-leave-active {
+  transition: all 0.5s cubic-bezier(0.55, 0, 0.1, 1);
+}
+.list-enter-from,
+.list-leave-to {
+  opacity: 0;
+  transform: scale(0.9) translateY(30px);
+}
+.list-leave-active {
+  position: absolute;
 }
 
 .media-card {
@@ -159,6 +210,7 @@ const renderStars = (rating: number) => {
   flex-direction: column;
   overflow: hidden;
   border-radius: 12px;
+  background: rgba(255, 255, 255, 0.03);
 }
 .media-cover {
   width: 100%;
@@ -211,9 +263,14 @@ const renderStars = (rating: number) => {
   border-radius: 4px;
   cursor: pointer;
   font-size: 0.85rem;
+  transition: background 0.2s;
 }
-.btn-danger:hover {
+.btn-danger:hover:not(:disabled) {
   background: rgba(239, 68, 68, 0.4);
+}
+.btn-danger:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .fab {

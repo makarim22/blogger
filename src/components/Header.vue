@@ -1,10 +1,14 @@
 <script setup lang="ts">
 import { RouterLink, useRouter } from 'vue-router'
-import { isLoggedIn, logout } from '../services/auth'
+import { useAuthStore } from '../stores/auth'
+import { toast } from 'vue3-toastify'
 
 const router = useRouter()
+const authStore = useAuthStore()
+
 const handleLogout = () => {
-  logout()
+  authStore.logout()
+  toast.info('Logged out successfully')
   router.push('/')
 }
 </script>
@@ -17,7 +21,7 @@ const handleLogout = () => {
       </RouterLink>
       <nav class="nav-links">
         <RouterLink to="/" class="nav-link">Home</RouterLink>
-        <RouterLink v-if="!isLoggedIn" to="/login" class="btn-primary">Admin Login</RouterLink>
+        <RouterLink v-if="!authStore.isLoggedIn" to="/login" class="btn-primary">Admin Login</RouterLink>
         <button v-else @click="handleLogout" class="btn-primary" style="background: rgba(255,255,255,0.1)">Logout</button>
       </nav>
     </div>

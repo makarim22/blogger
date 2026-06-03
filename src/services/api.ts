@@ -1,4 +1,4 @@
-import { getToken } from './auth';
+
 
 export interface Post {
   id: string;
@@ -37,7 +37,7 @@ export interface BookReview {
 const API_URL = 'http://localhost:3000';
 
 const getHeaders = () => {
-  const token = getToken();
+  const token = localStorage.getItem('auth_token');
   return {
     'Content-Type': 'application/json',
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -128,7 +128,7 @@ export const uploadImage = async (file: File): Promise<string> => {
   const formData = new FormData();
   formData.append('file', file);
   
-  const token = getToken();
+  const token = localStorage.getItem('auth_token');
   const headers: HeadersInit = {};
   if (token) headers.Authorization = `Bearer ${token}`;
 

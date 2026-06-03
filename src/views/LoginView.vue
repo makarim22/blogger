@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { setToken } from '../services/auth'
+import { useAuthStore } from '../stores/auth'
+import { toast } from 'vue3-toastify'
 
 const router = useRouter()
+const authStore = useAuthStore()
 const email = ref('')
 const password = ref('')
 const errorMsg = ref('')
@@ -22,10 +24,12 @@ const handleLogin = async () => {
     if (!res.ok) throw new Error('Invalid credentials')
     
     const data = await res.json()
-    setToken(data.access_token)
+    authStore.setToken(data.access_token)
+    toast.success('Successfully logged in!')
     router.push('/')
   } catch (error: any) {
     errorMsg.value = error.message || 'Failed to login'
+    toast.error(errorMsg.value)
   } finally {
     loading.value = false
   }

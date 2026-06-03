@@ -16,6 +16,8 @@ export interface MovieReview {
   director: string;
   releaseYear: number;
   rating: number;
+  theGood?: string;
+  theBad?: string;
   watchDate: string;
   posterUrl?: string;
   review: string;
@@ -28,6 +30,8 @@ export interface BookReview {
   author: string;
   publishYear: number;
   rating: number;
+  theGood?: string;
+  theBad?: string;
   readDate: string;
   coverUrl?: string;
   review: string;
@@ -77,6 +81,17 @@ export const fetchMovies = async (): Promise<MovieReview[]> => {
   }
 };
 
+export const fetchMovie = async (id: string): Promise<MovieReview | null> => {
+  try {
+    const response = await fetch(`${API_URL}/movies/${id}`);
+    if (!response.ok) throw new Error('Failed to fetch movie');
+    return response.json();
+  } catch (error) {
+    console.error(error);
+    return null;
+  }
+};
+
 export const fetchBooks = async (): Promise<BookReview[]> => {
   try {
     const response = await fetch(`${API_URL}/books`);
@@ -85,6 +100,17 @@ export const fetchBooks = async (): Promise<BookReview[]> => {
   } catch (error) {
     console.error(error);
     return [];
+  }
+};
+
+export const fetchBook = async (id: string): Promise<BookReview | null> => {
+  try {
+    const response = await fetch(`${API_URL}/books/${id}`);
+    if (!response.ok) throw new Error('Failed to fetch book');
+    return response.json();
+  } catch (error) {
+    console.error(error);
+    return null;
   }
 };
 

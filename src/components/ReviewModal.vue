@@ -11,7 +11,9 @@ const queryClient = useQueryClient()
 const title = ref('')
 const creator = ref('') // Director or Author
 const year = ref<number>(new Date().getFullYear())
-const rating = ref(5)
+const rating = ref(8)
+const theGood = ref('')
+const theBad = ref('')
 const review = ref('')
 const selectedFile = ref<File | null>(null)
 
@@ -60,6 +62,8 @@ const handleSubmit = async () => {
         director: creator.value,
         releaseYear: year.value,
         rating: rating.value,
+        theGood: theGood.value,
+        theBad: theBad.value,
         review: review.value,
         watchDate: new Date().toISOString(),
         posterUrl: imageUrl
@@ -70,6 +74,8 @@ const handleSubmit = async () => {
         author: creator.value,
         publishYear: year.value,
         rating: rating.value,
+        theGood: theGood.value,
+        theBad: theBad.value,
         review: review.value,
         readDate: new Date().toISOString(),
         coverUrl: imageUrl
@@ -105,8 +111,19 @@ const isPending = movieMutation.isPending.value || bookMutation.isPending.value
             <input type="number" v-model="year" required />
           </div>
           <div class="col">
-            <label>Rating (1-5)</label>
-            <input type="number" min="1" max="5" v-model="rating" required />
+            <label>Rating (0-10)</label>
+            <input type="number" min="0" max="10" v-model="rating" required />
+          </div>
+        </div>
+        
+        <div class="form-group row">
+          <div class="col">
+            <label>The Good</label>
+            <input type="text" v-model="theGood" placeholder="Short summary..." />
+          </div>
+          <div class="col">
+            <label>The Bad</label>
+            <input type="text" v-model="theBad" placeholder="Short summary..." />
           </div>
         </div>
         

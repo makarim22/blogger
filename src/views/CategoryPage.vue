@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, toRef } from 'vue'
 import { useQuery } from '@tanstack/vue-query'
 import { fetchMovies, fetchBooks } from '../services/api'
 import { useHead } from '@unhead/vue'
@@ -7,11 +7,11 @@ import { RouterLink } from 'vue-router'
 
 const props = defineProps<{ type: 'movies' | 'books' }>()
 
-const fetchFn = () => props.type === 'movies' ? fetchMovies() : fetchBooks()
+const type = toRef(props, 'type')
 
 const { data, isLoading } = useQuery<any>({
-  queryKey: [props.type],
-  queryFn: fetchFn,
+  queryKey: computed(() => [type.value]),
+  queryFn: () => type.value === 'movies' ? fetchMovies() : fetchBooks(),
   staleTime: 60000,
 })
 

@@ -1,7 +1,9 @@
 <script setup lang="ts">
-import { RouterView } from 'vue-router'
+import { RouterView, useRoute } from 'vue-router'
 import Header from './components/Header.vue'
 import Footer from './components/Footer.vue'
+
+const route = useRoute()
 </script>
 
 <template>
@@ -10,7 +12,7 @@ import Footer from './components/Footer.vue'
     <main class="main-content">
       <RouterView v-slot="{ Component }">
         <transition name="fade" mode="out-in">
-          <component :is="Component" />
+          <component :is="Component" :key="route.name" />
         </transition>
       </RouterView>
     </main>

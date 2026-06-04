@@ -65,7 +65,34 @@ const topCreator = computed(() => {
 const averageRating = computed(() => {
   if (allSavedItems.value.length === 0) return 'N/A'
   const total = allSavedItems.value.reduce((acc, item) => acc + item.rating, 0)
-  return (total / allSavedItems.value.length).toFixed(1) + '/10'
+  return (total / allSavedItems.value.length).toFixed(1)
+})
+
+// Analytics
+const cinemaCount = computed(() => savedMovies.value.length)
+const literatureCount = computed(() => savedBooks.value.length)
+const totalCount = computed(() => cinemaCount.value + literatureCount.value)
+
+const cinemaPercentage = computed(() => {
+  if (totalCount.value === 0) return 50
+  return Math.round((cinemaCount.value / totalCount.value) * 100)
+})
+
+const literaturePercentage = computed(() => 100 - cinemaPercentage.value)
+
+// Badges
+const badges = computed(() => {
+  const b = []
+  if (cinemaCount.value >= 1) b.push({ id: 'cinephile', name: 'Cinephile', icon: '🎬', desc: 'Cinema curator' })
+  if (literatureCount.value >= 1) b.push({ id: 'bibliophile', name: 'Bibliophile', icon: '📖', desc: 'Literature curator' })
+  if (totalCount.value >= 3) b.push({ id: 'archivist', name: 'Master Archivist', icon: '🗄️', desc: 'Saved 3+ items' })
+  
+  const avg = parseFloat(averageRating.value)
+  if (!isNaN(avg)) {
+    if (avg <= 5) b.push({ id: 'critic', name: 'Harsh Critic', icon: '⚖️', desc: 'Avg rating ≤ 5' })
+    if (avg >= 8) b.push({ id: 'enthusiast', name: 'Enthusiast', icon: '✨', desc: 'Avg rating ≥ 8' })
+  }
+  return b
 })
 
 // Task 3: Custom Mixtapes
@@ -131,8 +158,38 @@ useHead({
             <span class="stat-label">Most Saved Creator</span>
           </div>
           <div class="stat-box">
-            <span class="stat-number">{{ averageRating }}</span>
+            <span class="stat-number">{{ averageRating !== 'N/A' ? averageRating + '/10' : 'N/A' }}</span>
             <span class="stat-label">Avg. Rating</span>
+          </div>
+        </section>
+
+        <!-- Advanced Analytics: Ratio & Badges -->
+        <section class="analytics-section">
+          <div class="analytics-grid">
+            
+            <div class="analytics-card ratio-card">
+              <h3 class="card-header">Consumption Ratio</h3>
+              <div class="ratio-labels">
+                <span class="ratio-cinema">Cinema {{ cinemaPercentage }}%</span>
+                <span class="ratio-literature">{{ literaturePercentage }}% Literature</span>
+              </div>
+              <div class="ratio-bar">
+                <div class="ratio-fill-cinema" :style="{ width: cinemaPercentage + '%' }"></div>
+                <div class="ratio-fill-literature" :style="{ width: literaturePercentage + '%' }"></div>
+              </div>
+            </div>
+
+            <div class="analytics-card badges-card">
+              <h3 class="card-header">Editorial Badges</h3>
+              <div v-if="badges.length === 0" class="no-badges">Save items to earn badges.</div>
+              <div v-else class="badges-container">
+                <div v-for="badge in badges" :key="badge.id" class="badge-item" :title="badge.desc">
+                  <span class="badge-icon">{{ badge.icon }}</span>
+                  <span class="badge-name">{{ badge.name }}</span>
+                </div>
+              </div>
+            </div>
+
           </div>
         </section>
 
@@ -267,6 +324,118 @@ useHead({
   font-size: 2.2rem;
   text-transform: uppercase;
   letter-spacing: 0.1em;
+}
+
+/* Analytics */
+.analytics-section {
+  margin-bottom: 60px;
+}
+
+.analytics-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+}
+
+@media (max-width: 768px) {
+  .analytics-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.analytics-card {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  padding: 30px;
+}
+
+.card-header {
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 24px;
+  color: var(--color-text-main);
+  border-bottom: 1px solid var(--color-border);
+  padding-bottom: 12px;
+}
+
+.ratio-labels {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 12px;
+}
+
+.ratio-cinema { color: #3b82f6; font-weight: 700; }
+.ratio-literature { color: #d97706; font-weight: 700; }
+
+.ratio-bar {
+  display: flex;
+  height: 20px;
+  width: 100%;
+  background-color: var(--color-border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.ratio-fill-cinema {
+  height: 100%;
+  background-color: #3b82f6;
+  transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.ratio-fill-literature {
+  height: 100%;
+  background-color: #d97706;
+  transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.badges-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.badge-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  background-color: var(--color-bg);
+  border: 1px solid var(--color-border);
+  padding: 16px;
+  border-radius: 8px;
+  flex: 1;
+  min-width: 100px;
+  text-align: center;
+  transition: transform 0.2s;
+}
+
+.badge-item:hover {
+  transform: translateY(-5px);
+  border-color: var(--color-text-main);
+}
+
+.badge-icon {
+  font-size: 2rem;
+}
+
+.badge-name {
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-main);
+}
+
+.no-badges {
+  font-family: var(--font-serif);
+  font-style: italic;
+  color: var(--color-text-muted);
 }
 
 .article-grid {

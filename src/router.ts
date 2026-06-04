@@ -7,6 +7,10 @@ import StatsView from './views/StatsView.vue'
 import WriteReviewPage from './views/WriteReviewPage.vue'
 import ProfileView from './views/ProfileView.vue'
 import TimelineView from './views/TimelineView.vue'
+import AboutView from './views/AboutView.vue'
+import PrivacyView from './views/PrivacyView.vue'
+import TermsView from './views/TermsView.vue'
+import GuidelinesView from './views/GuidelinesView.vue'
 
 // Auth guard for editor-only routes
 const requireAuth = (_to: any, _from: any, next: Function) => {
@@ -82,6 +86,26 @@ const router = createRouter({
       path: '/login',
       name: 'login',
       component: LoginView
+    },
+    {
+      path: '/about',
+      name: 'about',
+      component: AboutView
+    },
+    {
+      path: '/privacy',
+      name: 'privacy',
+      component: PrivacyView
+    },
+    {
+      path: '/terms',
+      name: 'terms',
+      component: TermsView
+    },
+    {
+      path: '/guidelines',
+      name: 'guidelines',
+      component: GuidelinesView
     }
   ]
 })

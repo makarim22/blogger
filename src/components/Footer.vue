@@ -12,14 +12,14 @@
           <RouterLink to="/">Homepage</RouterLink>
           <RouterLink to="/movies">Cinema</RouterLink>
           <RouterLink to="/books">Literature</RouterLink>
-          <RouterLink to="/">About Us</RouterLink>
+          <RouterLink to="/about">About Us</RouterLink>
         </div>
         
         <div class="link-group">
           <h3>Legal</h3>
-          <a href="#">Privacy Policy</a>
-          <a href="#">Terms of Service</a>
-          <a href="#">Editorial Guidelines</a>
+          <RouterLink to="/privacy">Privacy Policy</RouterLink>
+          <RouterLink to="/terms">Terms of Service</RouterLink>
+          <RouterLink to="/guidelines">Editorial Guidelines</RouterLink>
         </div>
       </div>
     </div>

@@ -75,6 +75,9 @@ body {
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   transition: background-color 0.3s ease, color 0.3s ease;
+  overscroll-behavior-y: none; /* Prevents pull-to-refresh bounce for native app feel */
+  overflow-wrap: break-word; /* Prevents long unbreakable words from forcing horizontal scroll */
+  word-break: break-word;
 }
 
 h1, h2, h3, h4, h5, h6 {

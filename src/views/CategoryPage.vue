@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, toRef } from 'vue'
+import { ref, computed, toRef, onMounted, onUnmounted, watch } from 'vue'
 import { useQuery } from '@tanstack/vue-query'
 import { fetchMovies, fetchBooks } from '../services/api'
 import { useHead } from '@unhead/vue'
@@ -49,6 +49,36 @@ const processedItems = computed(() => {
   return list
 })
 
+const visibleLimit = ref(8)
+const paginatedItems = computed(() => processedItems.value.slice(0, visibleLimit.value))
+
+watch([searchQuery, sortBy, type], () => {
+  visibleLimit.value = 8
+})
+
+const observerTarget = ref<HTMLElement | null>(null)
+let observer: IntersectionObserver | null = null
+
+onMounted(() => {
+  observer = new IntersectionObserver((entries) => {
+    if (entries[0].isIntersecting) {
+      if (visibleLimit.value < processedItems.value.length) {
+        // Simulating a slight delay for smoother UX
+        setTimeout(() => {
+          visibleLimit.value += 8
+        }, 300)
+      }
+    }
+  }, { rootMargin: '200px' })
+  
+  if (observerTarget.value) {
+    observer.observe(observerTarget.value)
+  }
+})
+
+onUnmounted(() => {
+  if (observer) observer.disconnect()
+})
 </script>
 
 <template>
@@ -87,25 +117,33 @@ const processedItems = computed(() => {
           <p>No records found matching your criteria.</p>
         </div>
         
-        <div v-else class="article-grid">
-          <RouterLink 
-            v-for="item in processedItems" 
-            :key="item.id" 
-            :to="`/review/${props.type}/${item.id}`"
-            class="article-card"
-          >
-            <div class="card-image">
-              <img v-if="props.type === 'movies' ? (item as any).posterUrl : (item as any).coverUrl" 
-                   :src="props.type === 'movies' ? (item as any).posterUrl : (item as any).coverUrl" 
-                   :alt="(item as any).title" />
-              <div v-else class="placeholder-img"></div>
-            </div>
-            <div class="card-content">
-              <h3 class="card-title">{{ (item as any).title }}</h3>
-              <p class="card-creator">By {{ props.type === 'movies' ? (item as any).director : (item as any).author }}</p>
-              <p class="card-score">Score: {{ (item as any).rating }}/10</p>
-            </div>
-          </RouterLink>
+        <div v-else>
+          <div class="article-grid">
+            <RouterLink 
+              v-for="item in paginatedItems" 
+              :key="item.id" 
+              :to="`/review/${props.type}/${item.id}`"
+              class="article-card"
+            >
+              <div class="card-image">
+                <img v-if="props.type === 'movies' ? (item as any).posterUrl : (item as any).coverUrl" 
+                     :src="props.type === 'movies' ? (item as any).posterUrl : (item as any).coverUrl" 
+                     :alt="(item as any).title" />
+                <div v-else class="placeholder-img"></div>
+              </div>
+              <div class="card-content">
+                <h3 class="card-title">{{ (item as any).title }}</h3>
+                <p class="card-creator">By {{ props.type === 'movies' ? (item as any).director : (item as any).author }}</p>
+                <p class="card-score">Score: {{ (item as any).rating }}/10</p>
+              </div>
+            </RouterLink>
+          </div>
+          
+          <!-- Infinite Scroll Observer Target -->
+          <div ref="observerTarget" class="scroll-trigger" v-show="visibleLimit < processedItems.length">
+            <div class="spinner"></div>
+            Loading more archives...
+          </div>
         </div>
       </main>
     </div>
@@ -232,5 +270,33 @@ const processedItems = computed(() => {
   font-family: var(--font-serif);
   font-style: italic;
   font-size: 1.25rem;
+}
+
+.scroll-trigger {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 60px 0;
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--color-text-muted);
+}
+
+.spinner {
+  width: 24px;
+  height: 24px;
+  border: 2px solid transparent;
+  border-top-color: var(--color-text-main);
+  border-right-color: var(--color-text-main);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 </style>

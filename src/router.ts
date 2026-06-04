@@ -6,6 +6,7 @@ import LoginView from './views/LoginView.vue'
 import StatsView from './views/StatsView.vue'
 import WriteReviewPage from './views/WriteReviewPage.vue'
 import ProfileView from './views/ProfileView.vue'
+import TimelineView from './views/TimelineView.vue'
 
 // Auth guard for editor-only routes
 const requireAuth = (_to: any, _from: any, next: Function) => {
@@ -71,6 +72,11 @@ const router = createRouter({
       name: 'profile',
       component: ProfileView,
       beforeEnter: requireAuth
+    },
+    {
+      path: '/timeline',
+      name: 'timeline',
+      component: TimelineView
     },
     {
       path: '/login',

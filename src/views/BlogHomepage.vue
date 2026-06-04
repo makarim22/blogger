@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref, onMounted, onUnmounted } from 'vue'
 import { useQuery } from '@tanstack/vue-query'
 import { fetchMovies, fetchBooks } from '../services/api'
 import { useHead } from '@unhead/vue'
@@ -32,6 +32,31 @@ const renderStars = (score: number) => {
   // Score is 0-10, we want 1-5 stars
   const stars = Math.round(score / 2);
   return '★'.repeat(stars) + '☆'.repeat(5 - stars);
+}
+
+const rouletteItem = ref<any>(null)
+const isSpinning = ref(false)
+const isRevealed = ref(false)
+
+const spinRoulette = () => {
+  if (latestReviews.value.length === 0) return
+  isSpinning.value = true
+  isRevealed.value = false
+  
+  let spins = 0
+  const maxSpins = 15
+  const interval = setInterval(() => {
+    rouletteItem.value = latestReviews.value[Math.floor(Math.random() * latestReviews.value.length)]
+    spins++
+    if (spins >= maxSpins) {
+      clearInterval(interval)
+      isSpinning.value = false
+    }
+  }, 100)
+}
+
+const revealRoulette = () => {
+  isRevealed.value = true
 }
 
 const curatedCollections = computed(() => {
@@ -161,6 +186,47 @@ const curatedCollections = computed(() => {
               <p class="card-excerpt">{{ item.review.substring(0, 100) }}...</p>
             </div>
           </RouterLink>
+        </div>
+      </section>
+
+      <!-- Blind Date with an Archive -->
+      <section class="container roulette-section">
+        <div class="roulette-container">
+          <div class="roulette-header">
+            <h2 class="section-title">Blind Date with an Archive</h2>
+            <p class="collection-desc">Can't decide? Let fate choose your next obsession.</p>
+          </div>
+          
+          <div class="roulette-box" v-if="rouletteItem">
+            <div class="roulette-card" :class="{ 'is-blurred': !isRevealed, 'is-spinning': isSpinning }">
+              <div class="roulette-image">
+                <img v-if="rouletteItem.image" :src="rouletteItem.image" alt="Mystery Cover" />
+              </div>
+              <div class="roulette-overlay" v-if="!isRevealed">
+                <span>?</span>
+              </div>
+            </div>
+            
+            <div class="roulette-actions">
+              <button class="btn-outline" @click="spinRoulette" :disabled="isSpinning">
+                {{ isSpinning ? 'Selecting...' : 'Spin the Roulette' }}
+              </button>
+              <button class="btn-primary" v-if="!isSpinning && !isRevealed" @click="revealRoulette">
+                Reveal
+              </button>
+              <RouterLink v-if="isRevealed" :to="`/review/${rouletteItem.type}/${rouletteItem.id}`" class="btn-primary">
+                Read Critique
+              </RouterLink>
+            </div>
+            
+            <div class="roulette-info" v-if="isRevealed">
+              <h3>{{ rouletteItem.displayTitle }}</h3>
+              <p>By {{ rouletteItem.displayCreator }}</p>
+            </div>
+          </div>
+          <div class="roulette-box" v-else>
+            <button class="btn-outline btn-large" @click="spinRoulette">Take a Chance</button>
+          </div>
         </div>
       </section>
 
@@ -500,6 +566,120 @@ const curatedCollections = computed(() => {
 .collection-card-creator {
   font-family: var(--font-serif);
   font-size: 0.95rem;
+  font-style: italic;
+  color: var(--color-text-muted);
+}
+
+/* Roulette Section */
+.roulette-section {
+  padding: 80px 0;
+  background-color: var(--color-surface);
+  border-top: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+  margin-bottom: 80px;
+}
+
+.roulette-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.roulette-header {
+  margin-bottom: 40px;
+}
+
+.roulette-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+}
+
+.roulette-card {
+  position: relative;
+  width: 200px;
+  aspect-ratio: 2/3;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+  transition: all 0.5s ease;
+}
+
+.roulette-card.is-spinning {
+  animation: shake 0.2s infinite;
+}
+
+@keyframes shake {
+  0% { transform: translate(1px, 1px) rotate(0deg); }
+  10% { transform: translate(-1px, -2px) rotate(-1deg); }
+  20% { transform: translate(-3px, 0px) rotate(1deg); }
+  30% { transform: translate(3px, 2px) rotate(0deg); }
+  40% { transform: translate(1px, -1px) rotate(1deg); }
+  50% { transform: translate(-1px, 2px) rotate(-1deg); }
+  60% { transform: translate(-3px, 1px) rotate(0deg); }
+  70% { transform: translate(3px, 1px) rotate(-1deg); }
+  80% { transform: translate(-1px, -1px) rotate(1deg); }
+  90% { transform: translate(1px, 2px) rotate(0deg); }
+  100% { transform: translate(1px, -2px) rotate(-1deg); }
+}
+
+.roulette-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: filter 1s ease;
+}
+
+.roulette-card.is-blurred .roulette-image img {
+  filter: blur(20px) grayscale(100%);
+  transform: scale(1.1);
+}
+
+.roulette-overlay {
+  position: absolute;
+  top: 0; left: 0; width: 100%; height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.3);
+  color: #fff;
+  font-size: 4rem;
+  font-family: var(--font-serif);
+}
+
+.roulette-actions {
+  display: flex;
+  gap: 16px;
+}
+
+.btn-primary {
+  background-color: var(--color-text-main);
+  color: var(--color-bg);
+  border: 1px solid var(--color-text-main);
+  padding: 10px 20px;
+  font-family: var(--font-sans);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+
+.btn-primary:hover {
+  background-color: transparent;
+  color: var(--color-text-main);
+}
+
+.roulette-info h3 {
+  font-size: 1.5rem;
+  margin-bottom: 4px;
+}
+.roulette-info p {
+  font-family: var(--font-serif);
   font-style: italic;
   color: var(--color-text-muted);
 }

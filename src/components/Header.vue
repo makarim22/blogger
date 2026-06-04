@@ -11,6 +11,23 @@ const authStore = useAuthStore()
 const { isDark, toggleTheme } = useTheme()
 
 const showWriteMenu = ref(false)
+const isAmbientPlaying = ref(false)
+const audioRef = ref<HTMLAudioElement | null>(null)
+
+const toggleAmbient = () => {
+  if (audioRef.value) {
+    if (isAmbientPlaying.value) {
+      audioRef.value.pause()
+      isAmbientPlaying.value = false
+    } else {
+      audioRef.value.play().then(() => {
+        isAmbientPlaying.value = true
+      }).catch(e => {
+        toast.error('Browser blocked autoplay.')
+      })
+    }
+  }
+}
 
 const toggleWriteMenu = () => {
   showWriteMenu.value = !showWriteMenu.value
@@ -47,12 +64,21 @@ onUnmounted(() => window.removeEventListener('click', onClickOutside))
       <nav class="nav-center">
         <RouterLink to="/movies" class="nav-link">Cinema</RouterLink>
         <RouterLink to="/books" class="nav-link">Literature</RouterLink>
-        <RouterLink to="/" class="nav-link">Latest</RouterLink>
+        <RouterLink to="/timeline" class="nav-link">Timeline</RouterLink>
       </nav>
 
       <div class="nav-right">
         <!-- Global Search -->
         <GlobalSearch class="global-search-component" />
+
+        <!-- Ambient Soundscapes -->
+        <button class="icon-btn theme-btn" @click="toggleAmbient" :title="isAmbientPlaying ? 'Pause Ambient Rain' : 'Play Ambient Rain'">
+          <span v-if="isAmbientPlaying">🌧️</span>
+          <span v-else style="filter: grayscale(100%); opacity: 0.5;">🌧️</span>
+        </button>
+        <audio ref="audioRef" loop>
+          <source src="https://actions.google.com/sounds/v1/weather/rain_on_roof.ogg" type="audio/ogg">
+        </audio>
 
         <!-- Theme Toggle -->
         <button class="icon-btn theme-btn" @click="toggleTheme" :title="isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'">

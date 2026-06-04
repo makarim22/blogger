@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter, RouterLink } from 'vue-router'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/vue-query'
 import { fetchMovie, fetchBook, deleteMovie, deleteBook, fetchProfile, toggleSaveMovie, toggleSaveBook } from '../services/api'
@@ -122,6 +122,71 @@ const handleDelete = () => {
 // Focus Mode State
 const isFocusMode = ref(false)
 
+// Task 2: Voice of Noir (Audio Narration)
+const isPlayingAudio = ref(false)
+let speechUtterance: SpeechSynthesisUtterance | null = null
+
+const toggleAudio = () => {
+  if (isPlayingAudio.value) {
+    window.speechSynthesis.cancel()
+    isPlayingAudio.value = false
+  } else {
+    if (!processedItem.value) return;
+    const textToRead = `${processedItem.value.displayTitle}, reviewed by ${processedItem.value.author?.name || 'The Editor'}. ${processedItem.value.review.replace(/[#*]/g, '')}`
+    
+    speechUtterance = new SpeechSynthesisUtterance(textToRead)
+    const voices = window.speechSynthesis.getVoices()
+    const preferredVoice = voices.find(v => v.lang.includes('en') && (v.name.includes('Google UK') || v.name.includes('Samantha'))) || voices[0]
+    if (preferredVoice) speechUtterance.voice = preferredVoice
+    
+    speechUtterance.rate = 0.95
+    speechUtterance.pitch = 0.9
+    
+    speechUtterance.onend = () => {
+      isPlayingAudio.value = false
+    }
+    
+    window.speechSynthesis.speak(speechUtterance)
+    isPlayingAudio.value = true
+  }
+}
+
+// Task 3: Highlight & Save Quote
+const showHighlightMenu = ref(false)
+const highlightMenuPos = ref({ top: 0, left: 0 })
+const selectedText = ref('')
+
+const handleSelection = () => {
+  const selection = window.getSelection()
+  if (selection && selection.toString().trim().length > 10) {
+    const range = selection.getRangeAt(0)
+    const rect = range.getBoundingClientRect()
+    highlightMenuPos.value = {
+      top: rect.top + window.scrollY - 50,
+      left: rect.left + rect.width / 2
+    }
+    selectedText.value = selection.toString()
+    showHighlightMenu.value = true
+  } else {
+    showHighlightMenu.value = false
+  }
+}
+
+const saveQuote = () => {
+  toast.success('Quote saved to your Dossier!')
+  showHighlightMenu.value = false
+  window.getSelection()?.removeAllRanges()
+}
+
+onMounted(() => {
+  document.addEventListener('selectionchange', handleSelection)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('selectionchange', handleSelection)
+  window.speechSynthesis.cancel()
+})
+
 // Update SEO Head
 useHead({
   title: () => processedItem.value ? `${processedItem.value.displayTitle} | Literary Noir` : 'Loading Review...',
@@ -138,13 +203,28 @@ useHead({
     
     <!-- Floating Action Bar -->
     <div class="floating-actions">
+      <button @click="toggleAudio" class="btn-audio-toggle" :class="{ 'is-playing': isPlayingAudio }" title="Voice of Noir">
+        {{ isPlayingAudio ? '⏸ Pause Narration' : '🔊 Play Narration' }}
+      </button>
       <button @click="isFocusMode = !isFocusMode" class="btn-focus-toggle">
         {{ isFocusMode ? '⤫ Exit Focus Mode' : '⛶ Focus Mode' }}
       </button>
     </div>
 
+    <!-- Highlight Menu -->
+    <Transition name="fade">
+      <div v-if="showHighlightMenu" class="highlight-tooltip" :style="{ top: highlightMenuPos.top + 'px', left: highlightMenuPos.left + 'px' }">
+        <button @click="saveQuote" class="btn-highlight">
+          <span class="highlight-icon">❞</span> Save Quote
+        </button>
+      </div>
+    </Transition>
+
     <header class="review-header" v-show="!isFocusMode">
       <div class="hero-image-container">
+        <!-- Ambient Glow Layer -->
+        <img v-if="processedItem.image" :src="processedItem.image" alt="" class="hero-glow" />
+        <!-- Main Image -->
         <img v-if="processedItem.image" :src="processedItem.image" :alt="processedItem.displayTitle" class="hero-image" />
         <div v-else class="hero-placeholder"></div>
         <div class="hero-overlay"></div>
@@ -248,21 +328,39 @@ useHead({
   width: 100%;
   height: 100%;
   z-index: -1;
-  background-color: var(--color-text-main);
+  background-color: var(--color-bg); /* Use bg color to blend */
+  overflow: hidden;
+}
+
+.hero-glow {
+  position: absolute;
+  top: 10%;
+  left: 10%;
+  width: 80%;
+  height: 80%;
+  object-fit: cover;
+  filter: blur(80px) saturate(200%);
+  opacity: 0.4;
+  z-index: 0;
 }
 
 .hero-image {
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
-  opacity: 0.5;
-  filter: grayscale(100%);
+  opacity: 0.6;
+  filter: grayscale(80%) contrast(110%);
+  z-index: 1;
 }
 
 .hero-placeholder {
-  width: 100%;
-  height: 100%;
+  position: absolute;
+  top: 0; left: 0; width: 100%; height: 100%;
   background: #1a1a1b;
+  z-index: 1;
 }
 
 .hero-overlay {
@@ -270,8 +368,9 @@ useHead({
   bottom: 0;
   left: 0;
   width: 100%;
-  height: 80%;
-  background: linear-gradient(to top, var(--color-bg) 0%, transparent 100%);
+  height: 100%; /* Cover whole image for smooth fade */
+  background: linear-gradient(to top, var(--color-bg) 0%, rgba(26,26,27,0.4) 50%, transparent 100%);
+  z-index: 2;
 }
 
 .hero-content {
@@ -555,9 +654,12 @@ useHead({
   bottom: 30px;
   right: 30px;
   z-index: 100;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
-.btn-focus-toggle {
+.btn-focus-toggle, .btn-audio-toggle {
   background-color: var(--color-text-main);
   color: var(--color-bg);
   border: none;
@@ -570,15 +672,74 @@ useHead({
   cursor: pointer;
   box-shadow: 0 4px 12px rgba(0,0,0,0.3);
   transition: all 0.3s ease;
+  border-radius: 4px;
 }
 
-.btn-focus-toggle:hover {
+.btn-audio-toggle {
   background-color: var(--color-accent);
+}
+
+.btn-audio-toggle.is-playing {
+  background-color: #ef4444;
+}
+
+.btn-focus-toggle:hover, .btn-audio-toggle:hover {
   transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.4);
 }
 
 .is-focus-mode .btn-focus-toggle {
   background-color: #ef4444; /* Give exit button a distinct color, or keep it muted */
   color: #fff;
+}
+
+/* Highlight Menu Tooltip */
+.highlight-tooltip {
+  position: absolute;
+  z-index: 200;
+  transform: translateX(-50%);
+  background-color: var(--color-text-main);
+  border-radius: 6px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+  padding: 4px;
+}
+
+.highlight-tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  margin-left: -6px;
+  border-width: 6px;
+  border-style: solid;
+  border-color: var(--color-text-main) transparent transparent transparent;
+}
+
+.btn-highlight {
+  background: none;
+  border: none;
+  color: var(--color-bg);
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 0.85rem;
+  padding: 8px 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.highlight-icon {
+  font-family: var(--font-serif);
+  font-size: 1.2rem;
+  line-height: 1;
+}
+
+.fade-enter-active, .fade-leave-active {
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+.fade-enter-from, .fade-leave-to {
+  opacity: 0;
+  transform: translate(-50%, 10px);
 }
 </style>

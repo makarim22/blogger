@@ -14,6 +14,10 @@ const showWriteMenu = ref(false)
 const isAmbientPlaying = ref(false)
 const audioRef = ref<HTMLAudioElement | null>(null)
 
+const dispatchCommandK = () => {
+  window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', metaKey: true }))
+}
+
 const toggleAmbient = () => {
   if (audioRef.value) {
     if (isAmbientPlaying.value) {
@@ -68,6 +72,13 @@ onUnmounted(() => window.removeEventListener('click', onClickOutside))
       </nav>
 
       <div class="nav-right">
+        <!-- Search Hint -->
+        <div class="search-hint" @click="dispatchCommandK">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          <span>Search</span>
+          <kbd>⌘K</kbd>
+        </div>
+
         <!-- Global Search -->
         <GlobalSearch class="global-search-component" />
 
@@ -185,6 +196,38 @@ onUnmounted(() => window.removeEventListener('click', onClickOutside))
 
 .global-search-component {
   margin-right: 8px;
+  display: none;
+}
+
+.search-hint {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--color-border);
+  padding: 6px 12px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  transition: all 0.2s ease;
+  margin-right: 8px;
+}
+
+.search-hint:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--color-text-main);
+  border-color: var(--color-text-main);
+}
+
+.search-hint kbd {
+  background: rgba(0, 0, 0, 0.5);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-family: monospace;
+  letter-spacing: 0.05em;
 }
 
 .nav-link {
@@ -294,7 +337,7 @@ onUnmounted(() => window.removeEventListener('click', onClickOutside))
 
 .dropdown-icon {
   font-size: 1rem;
-  opacity: 0.8;
+  opacity: 1;
 }
 
 /* Dropdown animation */

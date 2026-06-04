@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { RouterView, useRoute } from 'vue-router'
 import Header from './components/Header.vue'
+import CommandPalette from './components/CommandPalette.vue'
 import Footer from './components/Footer.vue'
 
 const route = useRoute()
@@ -9,6 +10,7 @@ const route = useRoute()
 <template>
   <div class="app-layout">
     <Header />
+    <CommandPalette />
     <main class="main-content">
       <RouterView v-slot="{ Component }">
         <transition name="fade" mode="out-in">

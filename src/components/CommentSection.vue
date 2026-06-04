@@ -3,6 +3,7 @@ import { ref, computed } from 'vue'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/vue-query'
 import { fetchMovieComments, fetchBookComments, postComment } from '../services/api'
 import { toast } from 'vue3-toastify'
+import { formatDistanceToNow } from 'date-fns'
 
 const props = defineProps<{
   type: 'movies' | 'books'
@@ -46,10 +47,13 @@ const commentMutation = useMutation({
   },
   onError: (err, newComment, context) => {
     queryClient.setQueryData(queryKey.value, context?.previousComments)
-    toast.error('Failed to post your comment.')
+    toast.error('Failed to publish your letter.')
   },
   onSettled: () => {
     queryClient.invalidateQueries({ queryKey: queryKey.value })
+  },
+  onSuccess: () => {
+    toast.success('Your letter has been published.')
   }
 })
 
@@ -64,196 +68,223 @@ const submitComment = () => {
   commentMutation.mutate(payload)
 }
 
-const formatDate = (dateStr: string) => {
-  const d = new Date(dateStr)
-  return d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute:'2-digit' })
-}
 </script>
 
 <template>
-  <div class="comment-section">
-    <div class="section-divider">
-      <span class="divider-text">Reader Thoughts</span>
+  <div class="letters-section">
+    <div class="letters-header">
+      <h3 class="letters-title">Letters to the Editor</h3>
+      <div class="letters-divider"></div>
     </div>
-
-    <!-- Comment Form -->
-    <div class="comment-form glass-panel">
-      <h3 class="form-title">Leave a Comment</h3>
+    
+    <!-- Submission Form -->
+    <div class="letter-form">
+      <p class="form-instruction">Share your critique, perspective, or debate.</p>
+      
       <form @submit.prevent="submitComment">
-        <div class="field-group">
+        <div class="form-group">
           <input 
             type="text" 
             v-model="authorName" 
-            class="field-input" 
+            class="noir-input" 
             placeholder="Name (Optional)" 
+            maxlength="50"
           />
         </div>
-        <div class="field-group">
+        <div class="form-group">
           <textarea 
             v-model="content" 
-            class="field-input review-textarea" 
-            placeholder="Share your thoughts..." 
-            rows="3" 
+            class="noir-textarea" 
+            placeholder="Write your letter here..." 
+            rows="4"
             required
           ></textarea>
         </div>
-        <div class="actions">
-          <button type="submit" class="btn-primary btn-small" :disabled="commentMutation.isPending.value || !content.trim()">
-            {{ commentMutation.isPending.value ? 'Posting...' : 'Post Comment' }}
+        <div class="form-actions">
+          <button 
+            type="submit"
+            class="btn-primary" 
+            :disabled="commentMutation.isPending.value || !content.trim()"
+          >
+            {{ commentMutation.isPending.value ? 'Publishing...' : 'Publish Letter' }}
           </button>
         </div>
       </form>
     </div>
-
-    <!-- Comments List -->
-    <div class="comments-list">
-      <div v-if="isLoading" class="loading-state">
-        Loading thoughts...
-      </div>
-      <div v-else-if="!comments || comments.length === 0" class="empty-state">
-        No comments yet. Be the first to share your thoughts on this critique.
-      </div>
-      <div v-else class="comment-item" v-for="comment in comments" :key="comment.id">
-        <div class="comment-header">
-          <span class="comment-author">{{ comment.authorName || 'Anonymous Reader' }}</span>
-          <span class="comment-date">{{ formatDate(comment.createdAt) }}</span>
+    
+    <!-- Letters List -->
+    <div v-if="isLoading" class="letters-loading">Opening the archives...</div>
+    
+    <div v-else-if="!comments || comments.length === 0" class="letters-empty">
+      No letters have been published yet. Be the first to share your perspective.
+    </div>
+    
+    <div v-else class="letters-list">
+      <div v-for="comment in comments" :key="comment.id" class="letter-card">
+        <div class="letter-meta">
+          <span class="letter-author">{{ comment.authorName || 'Anonymous Reader' }}</span>
+          <span class="letter-date">{{ formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true }) }}</span>
         </div>
-        <div class="comment-content">
-          {{ comment.content }}
-        </div>
+        <p class="letter-content">{{ comment.content }}</p>
       </div>
     </div>
   </div>
 </template>
 
 <style scoped>
-.comment-section {
+.letters-section {
   margin-top: 80px;
-}
-
-.section-divider {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  margin-bottom: 40px;
-}
-
-.section-divider::before,
-.section-divider::after {
-  content: '';
-  flex: 1;
-  height: 1px;
-  background-color: var(--color-border);
-}
-
-.divider-text {
-  font-family: var(--font-sans);
-  font-size: 0.8rem;
-  text-transform: uppercase;
-  letter-spacing: 0.2em;
-  font-weight: 700;
-  color: var(--color-text-main);
-  white-space: nowrap;
-}
-
-.comment-form {
-  padding: 30px;
-  margin-bottom: 40px;
-  background: var(--card-bg-fallback);
-  border-radius: 8px;
-}
-
-.form-title {
-  font-family: var(--font-sans);
-  font-size: 1.1rem;
-  margin-bottom: 20px;
-  color: var(--color-text-main);
-}
-
-.field-group {
-  margin-bottom: 16px;
-}
-
-.field-input {
-  width: 100%;
-  font-family: var(--font-sans);
-  font-size: 1rem;
-  color: var(--color-text-main);
-  background: transparent;
-  border: none;
-  border-bottom: 1px solid var(--color-border);
-  padding: 10px 0;
-  outline: none;
-  transition: border-color 0.2s;
-  border-radius: 0;
-}
-
-.field-input:focus {
-  border-bottom-color: var(--color-text-main);
-}
-
-.review-textarea {
-  resize: vertical;
-}
-
-.actions {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: 16px;
-}
-
-.btn-small {
-  padding: 8px 16px;
-  font-size: 0.85rem;
-}
-
-.comments-list {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-}
-
-.comment-item {
-  padding: 24px;
+  padding: 40px;
+  background-color: var(--color-surface);
   border: 1px solid var(--color-border);
-  background: var(--color-bg);
-  border-left: 3px solid var(--color-accent);
+  box-shadow: 10px 10px 0 rgba(0,0,0,0.5); /* brutalist shadow */
 }
 
-.comment-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  margin-bottom: 12px;
+.letters-header {
+  margin-bottom: 40px;
 }
 
-.comment-author {
+.letters-title {
   font-family: var(--font-sans);
-  font-weight: 700;
-  font-size: 1rem;
+  font-size: 2rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
   color: var(--color-text-main);
 }
 
-.comment-date {
-  font-family: var(--font-sans);
-  font-size: 0.8rem;
-  color: var(--color-text-muted);
+.letters-divider {
+  height: 2px;
+  background-color: var(--color-border);
+  margin-top: 16px;
+  width: 100px;
 }
 
-.comment-content {
-  font-family: var(--font-serif);
-  font-size: 1.1rem;
-  line-height: 1.6;
-  color: var(--color-text-main);
-  white-space: pre-wrap;
+/* Form Styles */
+.letter-form {
+  margin-bottom: 60px;
 }
 
-.empty-state, .loading-state {
-  text-align: center;
+.form-instruction {
   font-family: var(--font-serif);
   font-style: italic;
   color: var(--color-text-muted);
-  padding: 40px;
-  border: 1px dashed var(--color-border);
+  margin-bottom: 24px;
+  font-size: 1.1rem;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.noir-input,
+.noir-textarea {
+  width: 100%;
+  background: transparent;
+  border: 1px solid var(--color-border);
+  color: var(--color-text-main);
+  padding: 16px;
+  font-family: var(--font-serif);
+  font-size: 1.1rem;
+  outline: none;
+  transition: border-color 0.2s ease;
+  border-radius: 0;
+}
+
+.noir-textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+.noir-input:focus,
+.noir-textarea:focus {
+  border-color: var(--color-text-main);
+  box-shadow: inset 0 0 0 1px var(--color-text-main);
+}
+
+.noir-input::placeholder,
+.noir-textarea::placeholder {
+  color: #52525b;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.btn-primary {
+  background-color: var(--color-text-main);
+  color: var(--color-bg);
+  border: none;
+  padding: 12px 24px;
+  cursor: pointer;
+  font-family: var(--font-sans);
+  text-transform: uppercase;
+  font-weight: bold;
+  letter-spacing: 0.05em;
+  transition: opacity 0.2s;
+}
+
+.btn-primary:hover {
+  background-color: #e4e4e7;
+}
+
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Letters List */
+.letters-loading,
+.letters-empty {
+  font-family: var(--font-serif);
+  font-style: italic;
+  color: var(--color-text-muted);
+  font-size: 1.2rem;
+  padding: 40px 0;
+  text-align: center;
+  border-top: 1px dashed var(--color-border);
+}
+
+.letters-list {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}
+
+.letter-card {
+  border-top: 1px solid var(--color-border);
+  padding-top: 24px;
+}
+
+.letter-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 16px;
+}
+
+.letter-author {
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: 1.2rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-main);
+}
+
+.letter-date {
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+.letter-content {
+  font-family: var(--font-serif);
+  font-size: 1.1rem;
+  line-height: 1.6;
+  color: #d4d4d8;
+  margin: 0;
+  white-space: pre-wrap;
 }
 </style>

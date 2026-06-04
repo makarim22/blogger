@@ -31,8 +31,8 @@ RUN echo "server { \
     } \
 }" > /etc/nginx/conf.d/default.conf
 
-# Expose port 80
-EXPOSE 80
+# Expose default port (optional, Cloud Run handles this)
+EXPOSE 8080
 
-# Start Nginx server
-CMD ["nginx", "-g", "daemon off;"]
+# Start Nginx server, injecting Cloud Run's PORT env variable into the config
+CMD sed -i -e 's/listen 80;/listen '"${PORT:-8080}"';/g' /etc/nginx/conf.d/default.conf && nginx -g "daemon off;"

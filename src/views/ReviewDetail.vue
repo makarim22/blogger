@@ -2,7 +2,7 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter, RouterLink } from 'vue-router'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/vue-query'
-import { fetchMovie, fetchBook, deleteMovie, deleteBook, fetchProfile, toggleSaveMovie, toggleSaveBook } from '../services/api'
+import { fetchMovie, fetchBook, fetchMovies, fetchBooks, deleteMovie, deleteBook, fetchProfile, toggleSaveMovie, toggleSaveBook } from '../services/api'
 import FinalVerdict from '../components/FinalVerdict.vue'
 import CommentSection from '../components/CommentSection.vue'
 import { useHead } from '@unhead/vue'
@@ -103,7 +103,7 @@ const recommendations = computed(() => {
   
   if (sameCreator.length >= 3) return sameCreator.slice(0, 3)
   
-  const merged = [...sameCreator, ...filtered.filter(i => !sameCreator.includes(i))]
+  const merged = [...sameCreator, ...filtered.filter((i: any) => !sameCreator.includes(i))]
   // Sort the rest by rating
   return merged.sort((a, b) => {
     if (sameCreator.includes(a) && !sameCreator.includes(b)) return -1;
@@ -252,13 +252,13 @@ useHead({
               {{ isSaved ? '★ Saved to List' : '☆ Save to List' }}
             </button>
             <a v-if="type === 'movies'" 
-               :href="`https://www.youtube.com/results?search_query=${encodeURIComponent(processedItem.displayTitle + ' trailer')}`" 
+               :href="`https://www.youtube.com/results?search_query=${encodeURIComponent(`${processedItem.displayTitle} trailer`)}`" 
                target="_blank" 
                class="btn-trailer">
               ▶ Watch Trailer
             </a>
             <a v-else 
-               :href="`https://www.goodreads.com/search?q=${encodeURIComponent(processedItem.displayTitle + ' ' + processedItem.displayCreator)}`" 
+               :href="`https://www.goodreads.com/search?q=${encodeURIComponent(`${processedItem.displayTitle} ${processedItem.displayCreator}`)}`" 
                target="_blank" 
                class="btn-trailer">
               ▶ Find on Goodreads
@@ -280,7 +280,7 @@ useHead({
         <div class="reasons-header">3 REASONS</div>
         <ul class="reasons-list">
           <li v-for="(reason, idx) in threeReasons" :key="idx">
-            <span class="reason-number">0{{ idx + 1 }}</span>
+            <span class="reason-number">0{{ Number(idx) + 1 }}</span>
             <span class="reason-text">{{ reason }}</span>
           </li>
         </ul>

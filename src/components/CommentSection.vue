@@ -45,7 +45,7 @@ const commentMutation = useMutation({
     content.value = ''
     return { previousComments }
   },
-  onError: (err, newComment, context) => {
+  onError: (_err, _newComment, context) => {
     queryClient.setQueryData(queryKey.value, context?.previousComments)
     toast.error('Failed to publish your letter.')
   },

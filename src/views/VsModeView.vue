@@ -23,7 +23,7 @@ const selectedBook = computed(() => {
 const hasBothSelected = computed(() => selectedMovie.value && selectedBook.value)
 
 const ultimateVerdict = computed(() => {
-  if (!hasBothSelected.value) return null
+  if (!selectedMovie.value || !selectedBook.value) return null
   
   const diff = selectedMovie.value.rating - selectedBook.value.rating
   
@@ -90,21 +90,21 @@ useHead({ title: 'Split-Screen Adaptations | Literary Noir' })
       <div class="split-side cinema-side">
         <div class="side-header">Cinema</div>
         <div class="cover-wrapper">
-          <img v-if="selectedMovie.posterUrl" :src="selectedMovie.posterUrl" :alt="selectedMovie.title" />
+          <img v-if="selectedMovie?.posterUrl" :src="selectedMovie?.posterUrl" :alt="selectedMovie?.title" />
           <div v-else class="placeholder-img"></div>
         </div>
-        <h2 class="item-title">{{ selectedMovie.title }}</h2>
-        <p class="item-meta">Directed by {{ selectedMovie.director }} &bull; {{ selectedMovie.releaseYear }}</p>
-        <div class="item-score">{{ selectedMovie.rating }}/10</div>
+        <h2 class="item-title">{{ selectedMovie?.title }}</h2>
+        <p class="item-meta">Directed by {{ selectedMovie?.director }} &bull; {{ selectedMovie?.releaseYear }}</p>
+        <div class="item-score">{{ selectedMovie?.rating }}/10</div>
         
         <div class="verdict-points">
           <div class="point-box good-box">
             <h4>The Good</h4>
-            <p>{{ selectedMovie.theGood || 'No commendations recorded.' }}</p>
+            <p>{{ selectedMovie?.theGood || 'No commendations recorded.' }}</p>
           </div>
           <div class="point-box bad-box">
             <h4>The Bad</h4>
-            <p>{{ selectedMovie.theBad || 'No flaws recorded.' }}</p>
+            <p>{{ selectedMovie?.theBad || 'No flaws recorded.' }}</p>
           </div>
         </div>
       </div>
@@ -118,21 +118,21 @@ useHead({ title: 'Split-Screen Adaptations | Literary Noir' })
       <div class="split-side literature-side">
         <div class="side-header">Literature</div>
         <div class="cover-wrapper">
-          <img v-if="selectedBook.coverUrl" :src="selectedBook.coverUrl" :alt="selectedBook.title" />
+          <img v-if="selectedBook?.coverUrl" :src="selectedBook?.coverUrl" :alt="selectedBook?.title" />
           <div v-else class="placeholder-img"></div>
         </div>
-        <h2 class="item-title">{{ selectedBook.title }}</h2>
-        <p class="item-meta">Written by {{ selectedBook.author }} &bull; {{ selectedBook.publishYear }}</p>
-        <div class="item-score">{{ selectedBook.rating }}/10</div>
+        <h2 class="item-title">{{ selectedBook?.title }}</h2>
+        <p class="item-meta">Written by {{ selectedBook?.author }} &bull; {{ selectedBook?.publishYear }}</p>
+        <div class="item-score">{{ selectedBook?.rating }}/10</div>
         
         <div class="verdict-points">
           <div class="point-box good-box">
             <h4>The Good</h4>
-            <p>{{ selectedBook.theGood || 'No commendations recorded.' }}</p>
+            <p>{{ selectedBook?.theGood || 'No commendations recorded.' }}</p>
           </div>
           <div class="point-box bad-box">
             <h4>The Bad</h4>
-            <p>{{ selectedBook.theBad || 'No flaws recorded.' }}</p>
+            <p>{{ selectedBook?.theBad || 'No flaws recorded.' }}</p>
           </div>
         </div>
       </div>

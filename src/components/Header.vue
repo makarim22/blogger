@@ -27,7 +27,7 @@ const toggleAmbient = () => {
     } else {
       audioRef.value.play().then(() => {
         isAmbientPlaying.value = true
-      }).catch(e => {
+      }).catch(() => {
         toast.error('Browser blocked autoplay.')
       })
     }

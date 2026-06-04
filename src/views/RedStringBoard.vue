@@ -20,7 +20,7 @@ onMounted(async () => {
     // Track creators to avoid duplicates
     const creatorMap = new Map()
 
-    const addCreator = (name: string, type: string) => {
+    const addCreator = (name: string, _type: string) => {
       if (!creatorMap.has(name)) {
         const id = `creator_${name}`
         creatorMap.set(name, id)

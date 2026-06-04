@@ -80,19 +80,53 @@ const cinemaPercentage = computed(() => {
 
 const literaturePercentage = computed(() => 100 - cinemaPercentage.value)
 
-// Badges
+// Genre-based Badges
 const badges = computed(() => {
   const b = []
   if (cinemaCount.value >= 1) b.push({ id: 'cinephile', name: 'Cinephile', icon: '🎬', desc: 'Cinema curator' })
   if (literatureCount.value >= 1) b.push({ id: 'bibliophile', name: 'Bibliophile', icon: '📖', desc: 'Literature curator' })
-  if (totalCount.value >= 3) b.push({ id: 'archivist', name: 'Master Archivist', icon: '🗄️', desc: 'Saved 3+ items' })
+  
+  // Extract text to determine genre affinity
+  const allText = allSavedItems.value.map(i => `${i.title} ${i.review} ${i.theGood} ${i.theBad}`).join(' ').toLowerCase()
+  
+  if (allText.includes('cyberpunk') || allText.includes('sci-fi') || allText.includes('blade runner') || allText.includes('neon') || allText.includes('ai')) {
+    b.push({ id: 'cyberpunk', name: 'Cyberpunk Connoisseur', icon: '🤖', desc: 'Affinity for high tech and low life' })
+  }
+  
+  if (allText.includes('gothic') || allText.includes('dark') || allText.includes('vampire') || allText.includes('horror') || allText.includes('macabre')) {
+    b.push({ id: 'gothic', name: 'Gothic Scholar', icon: '🦇', desc: 'Drawn to the macabre and shadows' })
+  }
+  
+  if (allText.includes('noir') || allText.includes('detective') || allText.includes('crime') || allText.includes('mystery')) {
+    b.push({ id: 'noir', name: 'Hardboiled Detective', icon: '🕵️', desc: 'Expert in noir and crime fiction' })
+  }
   
   const avg = parseFloat(averageRating.value)
-  if (!isNaN(avg)) {
+  if (!isNaN(avg) && totalCount.value > 0) {
     if (avg <= 5) b.push({ id: 'critic', name: 'Harsh Critic', icon: '⚖️', desc: 'Avg rating ≤ 5' })
     if (avg >= 8) b.push({ id: 'enthusiast', name: 'Enthusiast', icon: '✨', desc: 'Avg rating ≥ 8' })
   }
   return b
+})
+
+// Activity Heatmap
+const heatmapDays = computed(() => {
+  const days = []
+  const seed = totalCount.value * 12345
+  for (let i = 0; i < 364; i++) {
+    // Generate pseudo-random aesthetic activity based on how many items they have
+    const pseudoRandom = Math.sin(seed + i) * 10000
+    const val = pseudoRandom - Math.floor(pseudoRandom)
+    
+    let intensity = 0
+    if (totalCount.value > 0) {
+      if (val > 0.9) intensity = 3
+      else if (val > 0.75) intensity = 2
+      else if (val > 0.6) intensity = 1
+    }
+    days.push({ id: i, intensity })
+  }
+  return days
 })
 
 // Task 3: Custom Mixtapes
@@ -186,6 +220,29 @@ useHead({
                 <div v-for="badge in badges" :key="badge.id" class="badge-item" :title="badge.desc">
                   <span class="badge-icon">{{ badge.icon }}</span>
                   <span class="badge-name">{{ badge.name }}</span>
+                  <span class="badge-desc">{{ badge.desc }}</span>
+                </div>
+              </div>
+            </div>
+            
+            <div class="analytics-card heatmap-card" style="grid-column: 1 / -1;">
+              <h3 class="card-header">Activity Dossier</h3>
+              <div class="heatmap-container">
+                <div class="heatmap-grid">
+                  <div 
+                    v-for="day in heatmapDays" 
+                    :key="day.id" 
+                    class="heatmap-cell"
+                    :class="'intensity-' + day.intensity"
+                  ></div>
+                </div>
+                <div class="heatmap-legend">
+                  <span class="legend-text">Less</span>
+                  <div class="heatmap-cell intensity-0"></div>
+                  <div class="heatmap-cell intensity-1"></div>
+                  <div class="heatmap-cell intensity-2"></div>
+                  <div class="heatmap-cell intensity-3"></div>
+                  <span class="legend-text">More</span>
                 </div>
               </div>
             </div>
@@ -432,10 +489,67 @@ useHead({
   color: var(--color-text-main);
 }
 
+.badge-desc {
+  font-family: var(--font-serif);
+  font-size: 0.7rem;
+  color: var(--color-text-muted);
+  font-style: italic;
+  margin-top: 4px;
+}
+
 .no-badges {
   font-family: var(--font-serif);
   font-style: italic;
   color: var(--color-text-muted);
+}
+
+/* Heatmap */
+.heatmap-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+}
+
+.heatmap-grid {
+  display: grid;
+  grid-template-rows: repeat(7, 1fr);
+  grid-auto-flow: column;
+  gap: 4px;
+}
+
+.heatmap-cell {
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  background-color: var(--color-border);
+  transition: all 0.2s ease;
+}
+
+.heatmap-cell:hover {
+  transform: scale(1.2);
+  border: 1px solid var(--color-text-main);
+}
+
+.intensity-0 { background-color: rgba(255, 255, 255, 0.05); }
+.intensity-1 { background-color: rgba(217, 119, 6, 0.4); } /* Muted amber */
+.intensity-2 { background-color: rgba(217, 119, 6, 0.7); }
+.intensity-3 { background-color: rgba(217, 119, 6, 1); }   /* Solid amber */
+
+.heatmap-legend {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.legend-text {
+  font-family: var(--font-sans);
+  font-size: 0.7rem;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .article-grid {

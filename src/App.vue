@@ -3,6 +3,7 @@ import { RouterView, useRoute } from 'vue-router'
 import Header from './components/Header.vue'
 import CommandPalette from './components/CommandPalette.vue'
 import Footer from './components/Footer.vue'
+import MobileNavigation from './components/MobileNavigation.vue'
 
 const route = useRoute()
 </script>
@@ -19,6 +20,7 @@ const route = useRoute()
       </RouterView>
     </main>
     <Footer />
+    <MobileNavigation />
   </div>
 </template>
 

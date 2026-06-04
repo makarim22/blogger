@@ -683,4 +683,50 @@ const curatedCollections = computed(() => {
   font-style: italic;
   color: var(--color-text-muted);
 }
+
+/* Mobile Layout Adjustments */
+@media (max-width: 768px) {
+  .hero-section {
+    height: 70vh;
+    min-height: 400px;
+  }
+  
+  .hero-title {
+    font-size: clamp(2.5rem, 10vw, 3.5rem);
+  }
+  
+  .hero-content {
+    padding-bottom: 40px;
+  }
+  
+  .inner-circle-grid,
+  .article-grid {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+  
+  .collection-row {
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    padding-bottom: 24px;
+    margin-right: -16px;
+    padding-right: 16px;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .collection-card {
+    flex: 0 0 75%;
+    scroll-snap-align: center;
+  }
+  
+  /* Hide scrollbar for cleaner look */
+  .collection-row::-webkit-scrollbar {
+    display: none;
+  }
+  .collection-row {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
 </style>

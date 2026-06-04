@@ -856,4 +856,44 @@ useHead({
   opacity: 0;
   transform: translate(-50%, 10px);
 }
+
+/* Mobile Layout Adjustments */
+@media (max-width: 768px) {
+  .hero-section {
+    height: 60vh;
+  }
+  
+  .article-title {
+    font-size: clamp(2.5rem, 10vw, 3.5rem);
+  }
+  
+  .article-meta-bar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  
+  .editorial-header {
+    flex-direction: column;
+  }
+  
+  .editorial-sidebar {
+    position: static;
+    border-right: none;
+    border-bottom: 1px solid var(--color-border);
+    padding-right: 0;
+    padding-bottom: 32px;
+    margin-bottom: 32px;
+  }
+  
+  .floating-actions {
+    bottom: 84px; /* Above the Mobile Navigation bar (70px + padding) */
+    right: 16px;
+  }
+  
+  .btn-focus-toggle, .btn-audio-toggle {
+    padding: 10px 16px;
+    font-size: 0.75rem;
+  }
+}
 </style>

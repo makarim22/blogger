@@ -98,7 +98,7 @@ onUnmounted(() => window.removeEventListener('click', onClickOutside))
         <GlobalSearch class="global-search-component" />
 
         <!-- Ambient Soundscapes -->
-        <button class="icon-btn theme-btn" @click="toggleAmbient" :title="isAmbientPlaying ? 'Pause Ambient Rain' : 'Play Ambient Rain'">
+        <button class="icon-btn theme-btn btn-ambient" @click="toggleAmbient" :title="isAmbientPlaying ? 'Pause Ambient Rain' : 'Play Ambient Rain'">
           <span v-if="isAmbientPlaying">🌧️</span>
           <span v-else style="filter: grayscale(100%); opacity: 0.5;">🌧️</span>
         </button>
@@ -430,9 +430,14 @@ onUnmounted(() => window.removeEventListener('click', onClickOutside))
   background-color: var(--color-border-dark);
 }
 
-@media (max-width: 900px) {
-  .nav-center {
-    display: none;
+@media (max-width: 768px) {
+  .nav-center,
+  .search-hint,
+  .btn-ambient {
+    display: none !important;
+  }
+  
+  .header-content {
+    height: 60px; /* Slimmer header on mobile */
   }
 }
-</style>

@@ -79,6 +79,17 @@ const processedItem = computed(() => {
   }
 })
 
+const threeReasons = computed(() => {
+  if (!item.value) return []
+  const good = item.value.theGood
+  if (good && good.includes(',')) {
+    return good.split(',').map((s: string) => s.trim()).filter(Boolean).slice(0, 3)
+  }
+  return type === 'movies' 
+    ? ['Masterful Cinematography', 'Atmospheric Tension', 'Unforgettable Climax']
+    : ['Profound Thematic Depth', 'Immaculate Prose', 'A Haunting Narrative']
+})
+
 const recommendations = computed(() => {
   if (!allItems.value || !item.value) return []
   const filtered = allItems.value.filter((i: any) => i.id !== Number(id))
@@ -257,6 +268,18 @@ useHead({
         <h1 class="focus-title">{{ processedItem.displayTitle }}</h1>
         <p class="focus-subtitle">By {{ processedItem.displayCreator }}</p>
       </div>
+
+      <!-- Criterion "Three Reasons" Component -->
+      <div v-if="!isFocusMode && threeReasons.length > 0" class="three-reasons-block">
+        <div class="reasons-header">3 REASONS</div>
+        <ul class="reasons-list">
+          <li v-for="(reason, idx) in threeReasons" :key="idx">
+            <span class="reason-number">0{{ idx + 1 }}</span>
+            <span class="reason-text">{{ reason }}</span>
+          </li>
+        </ul>
+      </div>
+
       <div class="dropcap" v-html="processedItem.parsedReview"></div>
 
       <FinalVerdict 
@@ -508,6 +531,57 @@ useHead({
   line-height: 1;
   margin-right: 12px;
   margin-top: 4px;
+  color: var(--color-text-main);
+}
+
+/* Three Reasons Component */
+.three-reasons-block {
+  margin: 20px 0 60px;
+  padding: 40px;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  box-shadow: 10px 10px 0 rgba(0,0,0,0.5); /* brutalist shadow */
+}
+
+.reasons-header {
+  font-family: var(--font-sans);
+  font-size: 2rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--color-accent);
+  margin-bottom: 24px;
+  border-bottom: 2px solid var(--color-border);
+  padding-bottom: 8px;
+}
+
+.reasons-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.reasons-list li {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+}
+
+.reason-number {
+  font-family: var(--font-sans);
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-text-muted);
+  opacity: 0.5;
+}
+
+.reason-text {
+  font-family: var(--font-serif);
+  font-size: 1.5rem;
+  font-style: italic;
   color: var(--color-text-main);
 }
 

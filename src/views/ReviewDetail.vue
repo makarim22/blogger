@@ -536,23 +536,33 @@ useHead({
 
 /* Three Reasons Component */
 .three-reasons-block {
-  margin: 20px 0 60px;
-  padding: 40px;
-  background-color: var(--color-surface);
-  border: 1px solid var(--color-border);
-  box-shadow: 10px 10px 0 rgba(0,0,0,0.5); /* brutalist shadow */
+  margin: 60px 0;
+  padding: 0;
+  background-color: transparent;
+  border: none;
+  box-shadow: none;
 }
 
 .reasons-header {
   font-family: var(--font-sans);
-  font-size: 2rem;
-  font-weight: 900;
+  font-size: 0.85rem;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: var(--color-accent);
-  margin-bottom: 24px;
-  border-bottom: 2px solid var(--color-border);
-  padding-bottom: 8px;
+  letter-spacing: 0.15em;
+  color: var(--color-text-muted);
+  margin-bottom: 30px;
+  text-align: center;
+}
+
+.reasons-header::before,
+.reasons-header::after {
+  content: "";
+  display: inline-block;
+  width: 50px;
+  height: 1px;
+  background-color: var(--color-border);
+  vertical-align: middle;
+  margin: 0 15px;
 }
 
 .reasons-list {
@@ -561,28 +571,52 @@ useHead({
   margin: 0;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 0;
 }
 
 .reasons-list li {
-  display: flex;
-  align-items: baseline;
-  gap: 16px;
+  display: grid;
+  grid-template-columns: 80px 1fr;
+  align-items: center;
+  padding: 24px 0;
+  border-top: 1px solid var(--color-border);
+  transition: transform 0.3s ease;
+}
+
+.reasons-list li:last-child {
+  border-bottom: 1px solid var(--color-border);
+}
+
+.reasons-list li:hover {
+  transform: translateX(10px);
+}
+
+.reasons-list li:hover .reason-number {
+  color: var(--color-accent);
 }
 
 .reason-number {
-  font-family: var(--font-sans);
-  font-size: 1.5rem;
-  font-weight: 700;
+  font-family: var(--font-serif);
+  font-size: 3rem;
+  font-weight: 900;
   color: var(--color-text-muted);
-  opacity: 0.5;
+  opacity: 0.3;
+  font-style: italic;
+  line-height: 1;
+  transition: color 0.3s ease, opacity 0.3s ease;
+}
+
+.reasons-list li:hover .reason-number {
+  opacity: 1;
 }
 
 .reason-text {
-  font-family: var(--font-serif);
-  font-size: 1.5rem;
-  font-style: italic;
+  font-family: var(--font-sans);
+  font-size: 1.25rem;
+  font-weight: 600;
   color: var(--color-text-main);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .editor-actions {

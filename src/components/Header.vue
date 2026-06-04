@@ -507,19 +507,21 @@ onUnmounted(() => window.removeEventListener('click', onClickOutside))
 .mobile-nav-links {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  align-items: center;
+  text-align: center;
+  gap: 32px;
 }
 
 .mobile-nav-item {
   font-family: var(--font-serif);
-  font-size: 2rem;
+  font-size: 1.8rem;
   color: var(--color-text-main);
   text-decoration: none;
   font-weight: 700;
   transition: color 0.2s;
   background: none;
   border: none;
-  text-align: left;
+  text-align: center;
   cursor: pointer;
   padding: 0;
 }
@@ -533,10 +535,11 @@ onUnmounted(() => window.removeEventListener('click', onClickOutside))
 }
 
 .mobile-nav-divider {
-  width: 100%;
-  height: 1px;
-  background-color: var(--color-border);
-  margin: 16px 0;
+  width: 40px;
+  height: 2px;
+  background-color: var(--color-accent);
+  margin: 8px 0;
+  opacity: 1;
 }
 
 @media (max-width: 768px) {

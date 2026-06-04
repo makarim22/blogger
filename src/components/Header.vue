@@ -226,8 +226,8 @@ onUnmounted(() => window.removeEventListener('click', onClickOutside))
 }
 
 .header-content {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
   height: 80px;
   position: relative;
@@ -259,19 +259,12 @@ onUnmounted(() => window.removeEventListener('click', onClickOutside))
   gap: 32px;
 }
 
-@media (min-width: 1100px) {
-  .nav-center {
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
-  }
-}
-
 .nav-right {
   display: flex;
   justify-content: flex-end;
   align-items: center;
   gap: 16px;
+  min-width: max-content;
 }
 
 .global-search-component {

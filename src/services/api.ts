@@ -59,6 +59,40 @@ const checkResponse = (res: Response, fallbackMsg: string) => {
   return res;
 };
 
+export const api = {
+  get: async (path: string) => {
+    const res = await fetch(`${API_URL}${path}`, { headers: getHeaders() });
+    checkResponse(res, `GET ${path} failed`);
+    return { data: await res.json() };
+  },
+  post: async (path: string, body: any) => {
+    const res = await fetch(`${API_URL}${path}`, {
+      method: 'POST',
+      headers: getHeaders(),
+      body: JSON.stringify(body)
+    });
+    checkResponse(res, `POST ${path} failed`);
+    return { data: await res.json() };
+  },
+  patch: async (path: string, body: any) => {
+    const res = await fetch(`${API_URL}${path}`, {
+      method: 'PATCH',
+      headers: getHeaders(),
+      body: JSON.stringify(body)
+    });
+    checkResponse(res, `PATCH ${path} failed`);
+    return { data: await res.json() };
+  },
+  delete: async (path: string) => {
+    const res = await fetch(`${API_URL}${path}`, {
+      method: 'DELETE',
+      headers: getHeaders()
+    });
+    checkResponse(res, `DELETE ${path} failed`);
+    return { data: await res.json() };
+  }
+};
+
 export const login = async (credentials: any): Promise<any> => {
   const res = await fetch(`${API_URL}/auth/login`, {
     method: 'POST',

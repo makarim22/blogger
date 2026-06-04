@@ -179,10 +179,11 @@ onUnmounted(() => window.removeEventListener('click', onClickOutside))
         </div>
 
         <template v-if="authStore.isLoggedIn">
-          <RouterLink to="/profile" class="nav-link auth-link desktop-auth">Dossier</RouterLink>
+          <RouterLink v-if="authStore.user?.role === 'ADMIN' || authStore.user?.role === 'EDITOR'" to="/dossier" class="nav-link auth-link desktop-auth">Dashboard</RouterLink>
+          <RouterLink to="/profile" class="nav-link auth-link desktop-auth">Profile</RouterLink>
           <button @click="handleLogout" class="nav-link auth-link btn-logout desktop-auth">Logout</button>
         </template>
-        <RouterLink v-else to="/login" class="nav-link auth-link desktop-auth">Editor</RouterLink>
+        <RouterLink v-else to="/login" class="nav-link auth-link desktop-auth">Login</RouterLink>
         
         <!-- Mobile Menu Toggle -->
         <button class="icon-btn mobile-menu-btn" @click="toggleMobileMenu">
@@ -206,10 +207,11 @@ onUnmounted(() => window.removeEventListener('click', onClickOutside))
           <RouterLink to="/vs" class="mobile-nav-item" @click="closeMobileMenu">Adaptations</RouterLink>
           <div class="mobile-nav-divider"></div>
           <template v-if="authStore.isLoggedIn">
-            <RouterLink to="/profile" class="mobile-nav-item" @click="closeMobileMenu">Editor Dossier</RouterLink>
+            <RouterLink v-if="authStore.user?.role === 'ADMIN' || authStore.user?.role === 'EDITOR'" to="/dossier" class="mobile-nav-item" @click="closeMobileMenu">Admin Dashboard</RouterLink>
+            <RouterLink to="/profile" class="mobile-nav-item" @click="closeMobileMenu">Profile</RouterLink>
             <button @click="() => { handleLogout(); closeMobileMenu(); }" class="mobile-nav-item mobile-logout-btn">Logout</button>
           </template>
-          <RouterLink v-else to="/login" class="mobile-nav-item" @click="closeMobileMenu">Editor Login</RouterLink>
+          <RouterLink v-else to="/login" class="mobile-nav-item" @click="closeMobileMenu">Login</RouterLink>
         </nav>
       </div>
     </Transition>

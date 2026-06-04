@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { useQuery } from '@tanstack/vue-query'
-import { fetchProfile } from '../services/api'
+import { fetchProfile, api } from '../services/api'
 import { useAuthStore } from '../stores/auth'
 import { useRouter, RouterLink } from 'vue-router'
 import { useHead } from '@unhead/vue'
@@ -17,6 +17,20 @@ if (!authStore.isLoggedIn) {
 const { data: profile, isLoading } = useQuery<any>({
   queryKey: ['profile'],
   queryFn: fetchProfile,
+  enabled: computed(() => authStore.isLoggedIn),
+})
+
+const fetchMyReviews = async () => {
+  const [m, b] = await Promise.all([
+    api.get('/movies/me').then(res => res.data),
+    api.get('/books/me').then(res => res.data)
+  ]);
+  return { movies: m, books: b };
+}
+
+const { data: myReviews } = useQuery<any>({
+  queryKey: ['myReviews'],
+  queryFn: fetchMyReviews,
   enabled: computed(() => authStore.isLoggedIn),
 })
 
@@ -281,6 +295,43 @@ useHead({
                   <img :src="item.image" :alt="item.displayTitle" />
                 </div>
                 <div v-if="mixtape.items.length > 5" class="mixtape-more">+{{ mixtape.items.length - 5 }}</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- My Submissions -->
+        <section class="submissions-section">
+          <h2 class="section-title">My Intelligence Reports</h2>
+          <div class="divider-dark"></div>
+          
+          <div v-if="!myReviews?.movies?.length && !myReviews?.books?.length" class="empty-state">
+            <p>You have not submitted any intelligence reports yet.</p>
+          </div>
+          <div v-else class="article-grid">
+            <div v-for="item in myReviews.movies" :key="item.id" class="article-card" @click="router.push(`/review/movies/${item.id}`)">
+              <div class="card-image">
+                <img v-if="item.posterUrl" :src="item.posterUrl" :alt="item.title" />
+                <div v-else class="placeholder-img"></div>
+                <div class="status-badge" :class="item.status.toLowerCase()">{{ item.status }}</div>
+              </div>
+              <div class="card-content">
+                <h3 class="card-title">{{ item.title }}</h3>
+                <p class="card-creator">Cinema</p>
+                <p class="card-score">Score: {{ item.rating }}/10</p>
+              </div>
+            </div>
+            
+            <div v-for="item in myReviews.books" :key="item.id" class="article-card" @click="router.push(`/review/books/${item.id}`)">
+              <div class="card-image">
+                <img v-if="item.coverUrl" :src="item.coverUrl" :alt="item.title" />
+                <div v-else class="placeholder-img"></div>
+                <div class="status-badge" :class="item.status.toLowerCase()">{{ item.status }}</div>
+              </div>
+              <div class="card-content">
+                <h3 class="card-title">{{ item.title }}</h3>
+                <p class="card-creator">Literature</p>
+                <p class="card-score">Score: {{ item.rating }}/10</p>
               </div>
             </div>
           </div>
@@ -620,6 +671,28 @@ useHead({
   font-style: italic;
   font-size: 1.25rem;
 }
+
+.submissions-section {
+  margin-top: 60px;
+  margin-bottom: 60px;
+}
+
+.status-badge {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  padding: 4px 8px;
+  font-family: monospace;
+  font-weight: bold;
+  font-size: 0.8rem;
+  background: rgba(0,0,0,0.7);
+  color: white;
+  border-radius: 4px;
+}
+
+.status-badge.approved { border-left: 4px solid #2ecc71; }
+.status-badge.pending { border-left: 4px solid #f39c12; }
+.status-badge.rejected { border-left: 4px solid #e74c3c; }
 
 /* Mixtapes */
 .mixtapes-section {

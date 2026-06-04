@@ -13,6 +13,8 @@ import TermsView from './views/TermsView.vue'
 import GuidelinesView from './views/GuidelinesView.vue'
 import RedStringBoard from './views/RedStringBoard.vue'
 import VsModeView from './views/VsModeView.vue'
+import AuthCallback from './views/AuthCallback.vue'
+import AdminDashboard from './views/AdminDashboard.vue'
 
 // Auth guard for editor-only routes
 const requireAuth = (_to: any, _from: any, next: Function) => {
@@ -118,6 +120,17 @@ const router = createRouter({
       path: '/guidelines',
       name: 'guidelines',
       component: GuidelinesView
+    },
+    {
+      path: '/auth/callback',
+      name: 'auth-callback',
+      component: AuthCallback
+    },
+    {
+      path: '/dossier',
+      name: 'dossier',
+      component: AdminDashboard,
+      beforeEnter: requireAuth
     }
   ]
 })

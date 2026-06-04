@@ -4,29 +4,37 @@ import { useQuery } from '@tanstack/vue-query'
 import { fetchMovies, fetchBooks } from '../services/api'
 import { useHead } from '@unhead/vue'
 import { RouterLink } from 'vue-router'
+import { ref } from 'vue'
+
+const currentMode = ref<'all' | 'cinema' | 'literature'>('all')
 
 const { data: movies, isLoading: loadingMovies } = useQuery({ queryKey: ['movies'], queryFn: fetchMovies })
 const { data: books, isLoading: loadingBooks } = useQuery({ queryKey: ['books'], queryFn: fetchBooks })
 
 const timelineItems = computed(() => {
-  const all = [
-    ...(movies.value || []).map(m => ({ 
+  let all = []
+  
+  if (currentMode.value === 'all' || currentMode.value === 'cinema') {
+    all.push(...(movies.value || []).map(m => ({ 
       ...m, 
       type: 'movies', 
       year: m.releaseYear, 
       displayTitle: m.title, 
       displayCreator: m.director, 
       image: m.posterUrl 
-    })),
-    ...(books.value || []).map(b => ({ 
+    })))
+  }
+  
+  if (currentMode.value === 'all' || currentMode.value === 'literature') {
+    all.push(...(books.value || []).map(b => ({ 
       ...b, 
       type: 'books', 
       year: b.publishYear, 
       displayTitle: b.title, 
       displayCreator: b.author, 
       image: b.coverUrl 
-    }))
-  ]
+    })))
+  }
   // Sort strictly by historical year
   return all.sort((a, b) => a.year - b.year)
 })
@@ -43,6 +51,22 @@ useHead({
       <div class="container">
         <h1 class="page-title">The Archives Timeline</h1>
         <p class="subtitle">A historical journey through cinema and literature.</p>
+        
+        <div class="timeline-filters">
+          <button 
+            :class="{ active: currentMode === 'all' }" 
+            @click="currentMode = 'all'"
+          >All Archives</button>
+          <button 
+            :class="{ active: currentMode === 'cinema' }" 
+            @click="currentMode = 'cinema'"
+          >Cinema</button>
+          <button 
+            :class="{ active: currentMode === 'literature' }" 
+            @click="currentMode = 'literature'"
+          >Literature</button>
+        </div>
+        
         <div class="divider-dark"></div>
       </div>
     </div>
@@ -102,6 +126,38 @@ useHead({
   font-style: italic;
   color: var(--color-text-muted);
   margin-bottom: 24px;
+}
+
+.timeline-filters {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.timeline-filters button {
+  background: transparent;
+  border: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+  font-family: var(--font-sans);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: 0.85rem;
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-radius: 20px;
+}
+
+.timeline-filters button:hover {
+  border-color: var(--color-text-main);
+  color: var(--color-text-main);
+}
+
+.timeline-filters button.active {
+  background-color: var(--color-text-main);
+  color: var(--color-bg);
+  border-color: var(--color-text-main);
 }
 
 .timeline-container {
@@ -172,12 +228,15 @@ useHead({
 
 .node-year {
   position: absolute;
-  top: -40px;
-  font-size: 3rem;
+  top: -38px;
+  font-family: var(--font-serif);
+  font-size: 2.5rem;
   font-weight: 900;
-  color: rgba(255,255,255,0.05); /* very subtle watermark */
-  z-index: 0;
-  letter-spacing: -0.05em;
+  font-style: italic;
+  color: var(--color-text-main);
+  z-index: 2;
+  letter-spacing: 0.02em;
+  text-shadow: 2px 2px 0 var(--color-bg);
 }
 
 .node-left .node-year { right: 0; }

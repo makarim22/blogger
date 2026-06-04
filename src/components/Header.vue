@@ -230,10 +230,13 @@ onUnmounted(() => window.removeEventListener('click', onClickOutside))
   justify-content: space-between;
   align-items: center;
   height: 80px;
+  position: relative;
 }
 
 .nav-brand {
-  flex: 1;
+  /* Let flex decide based on content */
+  display: flex;
+  align-items: center;
 }
 
 .logo {
@@ -251,14 +254,20 @@ onUnmounted(() => window.removeEventListener('click', onClickOutside))
 }
 
 .nav-center {
-  flex: 2;
   display: flex;
   justify-content: center;
-  gap: 40px;
+  gap: 32px;
+}
+
+@media (min-width: 1100px) {
+  .nav-center {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+  }
 }
 
 .nav-right {
-  flex: 1;
   display: flex;
   justify-content: flex-end;
   align-items: center;
@@ -309,6 +318,8 @@ onUnmounted(() => window.removeEventListener('click', onClickOutside))
   letter-spacing: 0.1em;
   color: var(--color-text-muted);
   transition: color 0.2s;
+  display: flex;
+  align-items: center;
 }
 
 .nav-link:hover,

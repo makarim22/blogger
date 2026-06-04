@@ -138,12 +138,12 @@ onUnmounted(() => {
               </div>
             </RouterLink>
           </div>
-          
-          <!-- Infinite Scroll Observer Target -->
-          <div ref="observerTarget" class="scroll-trigger" v-show="visibleLimit < processedItems.length">
-            <div class="spinner"></div>
-            Loading more archives...
-          </div>
+        </div>
+        
+        <!-- Infinite Scroll Observer Target -->
+        <div ref="observerTarget" class="scroll-trigger" v-show="!isLoading && processedItems.length > 0 && visibleLimit < processedItems.length">
+          <div class="spinner"></div>
+          Loading more archives...
         </div>
       </main>
     </div>

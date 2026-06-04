@@ -242,3 +242,29 @@ export const globalSearch = async (query: string): Promise<any[]> => {
     return [];
   }
 };
+
+export const fetchProfile = async (): Promise<any> => {
+  const res = await fetch(`${API_URL}/users/profile`, {
+    headers: getHeaders(),
+  });
+  checkResponse(res, 'Failed to fetch profile');
+  return res.json();
+};
+
+export const toggleSaveMovie = async (id: string): Promise<any> => {
+  const res = await fetch(`${API_URL}/users/save/movie/${id}`, {
+    method: 'POST',
+    headers: getHeaders(),
+  });
+  checkResponse(res, 'Failed to save movie');
+  return res.json();
+};
+
+export const toggleSaveBook = async (id: string): Promise<any> => {
+  const res = await fetch(`${API_URL}/users/save/book/${id}`, {
+    method: 'POST',
+    headers: getHeaders(),
+  });
+  checkResponse(res, 'Failed to save book');
+  return res.json();
+};

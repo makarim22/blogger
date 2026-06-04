@@ -34,6 +34,24 @@ const renderStars = (score: number) => {
   return '★'.repeat(stars) + '☆'.repeat(5 - stars);
 }
 
+const curatedCollections = computed(() => {
+  const all = latestReviews.value
+  return [
+    {
+      id: 'surreal',
+      title: "Surrealism & Dream Logic",
+      description: "Archives that defy reality and embrace the impossible.",
+      items: all.filter(i => ['Kafka on the Shore', 'Synecdoche, New York', "Pan's Labyrinth", "Spirited Away", "Ficciones", "Blindness"].includes(i.displayTitle)).slice(0, 4)
+    },
+    {
+      id: 'suspense',
+      title: "Masterworks of Suspense",
+      description: "Tension stretched to its absolute limit.",
+      items: all.filter(i => ['The Silence of the Lambs', 'Memories of Murder', 'The Thing', 'Oldboy', 'Arrival', 'The Social Network'].includes(i.displayTitle)).slice(0, 4)
+    }
+  ].filter(c => c.items.length > 0)
+})
+
 </script>
 
 <template>
@@ -81,6 +99,37 @@ const renderStars = (score: number) => {
               <div class="inner-card-image">
                 <img v-if="item.image" :src="item.image" :alt="item.displayTitle" />
                 <div v-else class="placeholder-img-dark"></div>
+              </div>
+            </RouterLink>
+          </div>
+        </div>
+      </section>
+
+      <!-- Curated Collections -->
+      <section class="container collections-section" v-if="curatedCollections.length > 0">
+        <div v-for="collection in curatedCollections" :key="collection.id" class="collection-block">
+          <div class="collection-header">
+            <div>
+              <h2 class="section-title">{{ collection.title }}</h2>
+              <p class="collection-desc">{{ collection.description }}</p>
+            </div>
+          </div>
+          <div class="divider-dark"></div>
+          
+          <div class="collection-row">
+            <RouterLink 
+              v-for="item in collection.items" 
+              :key="item.id" 
+              :to="`/review/${item.type}/${item.id}`"
+              class="collection-card"
+            >
+              <div class="card-image collection-image">
+                <img v-if="item.image" :src="item.image" :alt="item.displayTitle" />
+                <div v-else class="placeholder-img"></div>
+              </div>
+              <div class="card-content">
+                <h4 class="collection-card-title">{{ item.displayTitle }}</h4>
+                <p class="collection-card-creator">{{ item.displayCreator }}</p>
               </div>
             </RouterLink>
           </div>
@@ -394,5 +443,64 @@ const renderStars = (score: number) => {
   font-family: var(--font-serif);
   font-style: italic;
   font-size: 1.5rem;
+}
+
+/* Collections Section */
+.collections-section {
+  padding-top: 80px;
+}
+
+.collection-block {
+  margin-bottom: 60px;
+}
+
+.collection-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 16px;
+}
+
+.collection-desc {
+  font-family: var(--font-serif);
+  font-style: italic;
+  color: var(--color-text-muted);
+  font-size: 1.1rem;
+  margin-top: 8px;
+}
+
+.collection-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 24px;
+  margin-top: 32px;
+}
+
+.collection-card {
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.3s ease;
+}
+
+.collection-card:hover {
+  transform: translateY(-5px);
+}
+
+.collection-image {
+  aspect-ratio: 2/3;
+  margin-bottom: 12px;
+}
+
+.collection-card-title {
+  font-size: 1.2rem;
+  margin-bottom: 4px;
+  color: var(--color-text-main);
+}
+
+.collection-card-creator {
+  font-family: var(--font-serif);
+  font-size: 0.95rem;
+  font-style: italic;
+  color: var(--color-text-muted);
 }
 </style>

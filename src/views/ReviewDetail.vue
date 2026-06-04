@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { ref, computed } from 'vue'
 import { useRoute, useRouter, RouterLink } from 'vue-router'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/vue-query'
-import { fetchMovie, fetchBook, deleteMovie, deleteBook } from '../services/api'
+import { fetchMovie, fetchBook, deleteMovie, deleteBook, fetchProfile, toggleSaveMovie, toggleSaveBook } from '../services/api'
 import FinalVerdict from '../components/FinalVerdict.vue'
 import CommentSection from '../components/CommentSection.vue'
 import { useHead } from '@unhead/vue'
@@ -26,6 +26,45 @@ const { data: item, isLoading } = useQuery<any>({
   staleTime: 60000,
 })
 
+const { data: allItems } = useQuery<any>({
+  queryKey: [type],
+  queryFn: () => type === 'movies' ? fetchMovies() : fetchBooks(),
+  staleTime: 60000,
+})
+
+const { data: profile } = useQuery<any>({
+  queryKey: ['profile'],
+  queryFn: fetchProfile,
+  enabled: computed(() => authStore.isLoggedIn),
+})
+
+const isSaved = computed(() => {
+  if (!profile.value) return false;
+  if (type === 'movies') {
+    return profile.value.savedMovies?.some((sm: any) => sm.movieReviewId === id);
+  } else {
+    return profile.value.savedBooks?.some((sb: any) => sb.bookReviewId === id);
+  }
+})
+
+const toggleSaveMutation = useMutation({
+  mutationFn: () => type === 'movies' ? toggleSaveMovie(id) : toggleSaveBook(id),
+  onSuccess: () => {
+    queryClient.invalidateQueries({ queryKey: ['profile'] })
+    toast.success(isSaved.value ? 'Removed from your list' : 'Saved to your list')
+  },
+  onError: () => toast.error('Failed to update list')
+})
+
+const handleToggleSave = () => {
+  if (!authStore.isLoggedIn) {
+    toast.info('Please log in to save items')
+    router.push('/login')
+    return
+  }
+  toggleSaveMutation.mutate()
+}
+
 const processedItem = computed(() => {
   if (!item.value) return null
   const base = item.value as any
@@ -38,6 +77,28 @@ const processedItem = computed(() => {
     dateValue: new Date(type === 'movies' ? base.watchDate : base.readDate).toLocaleDateString(),
     parsedReview: DOMPurify.sanitize(marked.parse(base.review) as string)
   }
+})
+
+const recommendations = computed(() => {
+  if (!allItems.value || !item.value) return []
+  const filtered = allItems.value.filter((i: any) => i.id !== Number(id))
+  
+  // Recommend items by the same creator if possible, otherwise highest rated
+  const sameCreator = filtered.filter((i: any) => {
+    const creator1 = type === 'movies' ? i.director : i.author
+    const creator2 = type === 'movies' ? item.value.director : item.value.author
+    return creator1 === creator2
+  })
+  
+  if (sameCreator.length >= 3) return sameCreator.slice(0, 3)
+  
+  const merged = [...sameCreator, ...filtered.filter(i => !sameCreator.includes(i))]
+  // Sort the rest by rating
+  return merged.sort((a, b) => {
+    if (sameCreator.includes(a) && !sameCreator.includes(b)) return -1;
+    if (!sameCreator.includes(a) && sameCreator.includes(b)) return 1;
+    return b.rating - a.rating
+  }).slice(0, 3)
 })
 
 const deleteMutation = useMutation({
@@ -58,6 +119,9 @@ const handleDelete = () => {
   }
 }
 
+// Focus Mode State
+const isFocusMode = ref(false)
+
 // Update SEO Head
 useHead({
   title: () => processedItem.value ? `${processedItem.value.displayTitle} | Literary Noir` : 'Loading Review...',
@@ -70,8 +134,16 @@ useHead({
     <div class="container loading">Retrieving archive...</div>
   </div>
   
-  <div class="review-detail animate-fade-in" v-else-if="processedItem">
-    <header class="review-header">
+  <div class="review-detail animate-fade-in" :class="{ 'is-focus-mode': isFocusMode }" v-else-if="processedItem">
+    
+    <!-- Floating Action Bar -->
+    <div class="floating-actions">
+      <button @click="isFocusMode = !isFocusMode" class="btn-focus-toggle">
+        {{ isFocusMode ? '⤫ Exit Focus Mode' : '⛶ Focus Mode' }}
+      </button>
+    </div>
+
+    <header class="review-header" v-show="!isFocusMode">
       <div class="hero-image-container">
         <img v-if="processedItem.image" :src="processedItem.image" :alt="processedItem.displayTitle" class="hero-image" />
         <div v-else class="hero-placeholder"></div>
@@ -83,12 +155,28 @@ useHead({
           <span class="category-tag">Review &middot; {{ type === 'movies' ? 'Cinema' : 'Literature' }}</span>
           <h1 class="title">{{ processedItem.displayTitle }}</h1>
           <p class="subtitle">By {{ processedItem.displayCreator }}</p>
-          <p class="meta">{{ processedItem.dateLabel }}: {{ processedItem.dateValue }}</p>
+          <div class="meta-row">
+            <p class="meta">{{ processedItem.dateLabel }}: {{ processedItem.dateValue }}</p>
+            <button v-if="authStore.isLoggedIn" @click="handleToggleSave" class="btn-save" :class="{ 'is-saved': isSaved }" :disabled="toggleSaveMutation.isPending.value">
+              {{ isSaved ? '★ Saved to List' : '☆ Save to List' }}
+            </button>
+            <a v-if="type === 'movies'" 
+               :href="`https://www.youtube.com/results?search_query=${encodeURIComponent(processedItem.displayTitle + ' trailer')}`" 
+               target="_blank" 
+               class="btn-trailer">
+              ▶ Watch Trailer
+            </a>
+          </div>
         </div>
       </div>
     </header>
 
     <main class="container-narrow editorial-content">
+      <!-- Title only shows in focus mode -->
+      <div v-if="isFocusMode" class="focus-title-area">
+        <h1 class="focus-title">{{ processedItem.displayTitle }}</h1>
+        <p class="focus-subtitle">By {{ processedItem.displayCreator }}</p>
+      </div>
       <div class="dropcap" v-html="processedItem.parsedReview"></div>
 
       <FinalVerdict 
@@ -97,16 +185,43 @@ useHead({
         :the-bad="processedItem.theBad" 
       />
 
-      <div v-if="authStore.isLoggedIn" class="editor-actions">
-        <RouterLink :to="`/edit/${type}/${id}`" class="btn-outline btn-edit">
-          Edit Critique
-        </RouterLink>
-        <button @click="handleDelete" class="btn-outline btn-delete" :disabled="deleteMutation.isPending.value">
-          {{ deleteMutation.isPending.value ? 'Deleting...' : 'Delete Critique' }}
-        </button>
-      </div>
+      <div v-show="!isFocusMode">
+        <div v-if="authStore.isLoggedIn" class="editor-actions">
+          <RouterLink :to="`/edit/${type}/${id}`" class="btn-outline btn-edit">
+            Edit Critique
+          </RouterLink>
+          <button @click="handleDelete" class="btn-outline btn-delete" :disabled="deleteMutation.isPending.value">
+            {{ deleteMutation.isPending.value ? 'Deleting...' : 'Delete Critique' }}
+          </button>
+        </div>
 
-      <CommentSection :type="(type as 'movies' | 'books')" :id="id" />
+        <!-- Recommendations Section -->
+        <section v-if="recommendations.length > 0" class="recommendations-section">
+          <h3 class="recommendations-title">If you liked this, explore more...</h3>
+          <div class="divider-dark"></div>
+          <div class="recommendations-grid">
+            <RouterLink 
+              v-for="rec in recommendations" 
+              :key="rec.id" 
+              :to="`/review/${type}/${rec.id}`"
+              class="rec-card"
+            >
+              <div class="rec-image">
+                <img v-if="type === 'movies' ? rec.posterUrl : rec.coverUrl" 
+                     :src="type === 'movies' ? rec.posterUrl : rec.coverUrl" 
+                     :alt="rec.title" />
+                <div v-else class="placeholder-img"></div>
+              </div>
+              <div class="rec-content">
+                <h4 class="rec-title">{{ rec.title }}</h4>
+                <p class="rec-creator">By {{ type === 'movies' ? rec.director : rec.author }}</p>
+              </div>
+            </RouterLink>
+          </div>
+        </section>
+
+        <CommentSection :type="(type as 'movies' | 'books')" :id="id" />
+      </div>
     </main>
   </div>
   
@@ -205,12 +320,61 @@ useHead({
   color: var(--color-text-light);
 }
 
+.meta-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+}
+
+.btn-trailer, .btn-save {
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 8px 16px;
+  text-decoration: none;
+  font-weight: 700;
+  transition: all 0.2s ease;
+  border: 1px solid var(--color-text-main);
+  cursor: pointer;
+}
+
+.btn-trailer {
+  color: var(--color-bg);
+  background-color: var(--color-text-main);
+}
+.btn-trailer:hover {
+  background-color: var(--color-accent);
+  border-color: var(--color-accent);
+  color: #fff;
+  transform: translateY(-2px);
+}
+
+.btn-save {
+  background-color: transparent;
+  color: var(--color-text-main);
+}
+.btn-save:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  transform: translateY(-2px);
+}
+.btn-save.is-saved {
+  background-color: var(--color-text-main);
+  color: var(--color-bg);
+}
+.btn-save:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .editorial-content {
   font-family: var(--font-serif);
   font-size: 1.25rem;
   line-height: 1.8;
   color: var(--color-text-main);
   margin-bottom: 100px;
+  transition: all 0.5s ease;
 }
 
 .editorial-content :deep(p) {
@@ -293,5 +457,128 @@ useHead({
   font-family: var(--font-serif);
   font-style: italic;
   font-size: 1.5rem;
+}
+
+/* Recommendations Section */
+.recommendations-section {
+  margin-top: 80px;
+  margin-bottom: 60px;
+}
+
+.recommendations-title {
+  font-family: var(--font-sans);
+  font-size: 1.2rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+.recommendations-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 24px;
+  margin-top: 32px;
+}
+
+.rec-card {
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.3s ease;
+}
+
+.rec-card:hover {
+  transform: translateY(-5px);
+}
+
+.rec-image {
+  aspect-ratio: 2/3;
+  width: 100%;
+  overflow: hidden;
+  margin-bottom: 12px;
+  background-color: #e4e4e7;
+}
+
+.rec-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: grayscale(100%);
+  transition: filter 0.5s ease;
+}
+
+.rec-card:hover .rec-image img {
+  filter: grayscale(0%);
+}
+
+.rec-title {
+  font-size: 1.2rem;
+  margin-bottom: 4px;
+  color: var(--color-text-main);
+}
+
+.rec-creator {
+  font-family: var(--font-serif);
+  font-size: 0.95rem;
+  font-style: italic;
+  color: var(--color-text-muted);
+}
+
+/* Focus Mode Overrides */
+.is-focus-mode .editorial-content {
+  font-size: 1.5rem;
+  line-height: 2;
+  max-width: 700px; /* Even narrower for beautiful reading line lengths */
+  padding-top: 100px;
+}
+
+.focus-title-area {
+  text-align: center;
+  margin-bottom: 60px;
+}
+
+.focus-title {
+  font-size: 3rem;
+  margin-bottom: 12px;
+  color: var(--color-text-main);
+}
+
+.focus-subtitle {
+  font-family: var(--font-serif);
+  font-size: 1.25rem;
+  font-style: italic;
+  color: var(--color-text-muted);
+}
+
+.floating-actions {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  z-index: 100;
+}
+
+.btn-focus-toggle {
+  background-color: var(--color-text-main);
+  color: var(--color-bg);
+  border: none;
+  padding: 12px 24px;
+  font-family: var(--font-sans);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  transition: all 0.3s ease;
+}
+
+.btn-focus-toggle:hover {
+  background-color: var(--color-accent);
+  transform: translateY(-2px);
+}
+
+.is-focus-mode .btn-focus-toggle {
+  background-color: #ef4444; /* Give exit button a distinct color, or keep it muted */
+  color: #fff;
 }
 </style>

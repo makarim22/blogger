@@ -97,8 +97,11 @@ onUnmounted(() => window.removeEventListener('click', onClickOutside))
           </Transition>
         </div>
 
-        <RouterLink v-if="!authStore.isLoggedIn" to="/login" class="nav-link auth-link">Editor</RouterLink>
-        <button v-else @click="handleLogout" class="nav-link auth-link btn-logout">Logout</button>
+        <template v-if="authStore.isLoggedIn">
+          <RouterLink to="/profile" class="nav-link auth-link">Dossier</RouterLink>
+          <button @click="handleLogout" class="nav-link auth-link btn-logout">Logout</button>
+        </template>
+        <RouterLink v-else to="/login" class="nav-link auth-link">Editor</RouterLink>
       </div>
     </div>
     <div class="header-border"></div>

@@ -51,6 +51,7 @@ const spinRoulette = () => {
     if (spins >= maxSpins) {
       clearInterval(interval)
       isSpinning.value = false
+      isRevealed.value = true
     }
   }, 100)
 }
@@ -246,8 +247,8 @@ const curatedCollections = computed(() => {
 /* Hero Section */
 .hero-section {
   position: relative;
-  height: 85vh;
-  min-height: 600px;
+  height: 70vh;
+  min-height: 500px;
   display: flex;
   align-items: flex-end;
   margin-bottom: 0; /* Connected to inner circle */
@@ -287,7 +288,7 @@ const curatedCollections = computed(() => {
 }
 
 .hero-content {
-  padding-bottom: 80px;
+  padding-bottom: 40px;
   position: relative;
   z-index: 2;
   width: 100%;
@@ -440,7 +441,7 @@ const curatedCollections = computed(() => {
 
 .article-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
   gap: 50px 40px;
   margin-bottom: 80px;
 }
@@ -537,7 +538,7 @@ const curatedCollections = computed(() => {
 
 .collection-row {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 24px;
   margin-top: 32px;
 }

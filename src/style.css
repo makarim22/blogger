@@ -110,15 +110,22 @@ img, video, canvas, svg {
 }
 
 /* Layout Utilities */
+#app {
+  width: 100%;
+  display: block;
+}
+
 .container {
+  width: 100%;
   max-width: 1200px;
-  margin: 0 auto;
+  margin: 0 auto !important;
   padding: 0 16px;
 }
 
 .container-narrow {
+  width: 100%;
   max-width: 800px;
-  margin: 0 auto;
+  margin: 0 auto !important;
   padding: 0 16px;
 }
 

@@ -356,7 +356,7 @@ useHead({
   left: 0;
   width: 100%;
   height: 100%;
-  z-index: -1;
+  z-index: 0; /* Fix: was -1, causing image to hide behind background */
   background-color: var(--color-bg); /* Use bg color to blend */
   overflow: hidden;
 }
@@ -867,9 +867,9 @@ useHead({
     font-size: clamp(2.5rem, 10vw, 3.5rem);
   }
   
-  .article-meta-bar {
+  .meta-row {
     flex-direction: column;
-    align-items: flex-start;
+    align-items: center; /* keep centered on mobile */
     gap: 12px;
   }
   

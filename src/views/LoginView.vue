@@ -4,6 +4,8 @@ import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import { toast } from 'vue3-toastify'
 
+import { login } from '../services/api'
+
 const router = useRouter()
 const authStore = useAuthStore()
 const email = ref('')
@@ -15,15 +17,7 @@ const handleLogin = async () => {
   errorMsg.value = ''
   loading.value = true
   try {
-    const res = await fetch('http://localhost:3000/auth/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: email.value, password: password.value })
-    })
-    
-    if (!res.ok) throw new Error('Invalid credentials')
-    
-    const data = await res.json()
+    const data = await login({ email: email.value, password: password.value })
     authStore.setToken(data.access_token)
     toast.success('Successfully logged in!')
     router.push('/')

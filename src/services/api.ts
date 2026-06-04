@@ -59,6 +59,16 @@ const checkResponse = (res: Response, fallbackMsg: string) => {
   return res;
 };
 
+export const login = async (credentials: any): Promise<any> => {
+  const res = await fetch(`${API_URL}/auth/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(credentials)
+  });
+  if (!res.ok) throw new Error('Invalid credentials');
+  return res.json();
+};
+
 export const fetchPosts = async (): Promise<Post[]> => {
   try {
     const response = await fetch(`${API_URL}/posts`);

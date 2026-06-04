@@ -11,6 +11,7 @@ const authStore = useAuthStore()
 const { currentTheme, toggleTheme } = useTheme()
 
 const showWriteMenu = ref(false)
+const showExploreMenu = ref(false)
 const isAmbientPlaying = ref(false)
 const audioRef = ref<HTMLAudioElement | null>(null)
 
@@ -68,9 +69,21 @@ onUnmounted(() => window.removeEventListener('click', onClickOutside))
       <nav class="nav-center">
         <RouterLink to="/movies" class="nav-link">Cinema</RouterLink>
         <RouterLink to="/books" class="nav-link">Literature</RouterLink>
-        <RouterLink to="/timeline" class="nav-link">Timeline</RouterLink>
-        <RouterLink to="/board" class="nav-link">Investigation</RouterLink>
-        <RouterLink to="/vs" class="nav-link">Adaptations</RouterLink>
+        
+        <div class="explore-dropdown-container" @mouseenter="showExploreMenu = true" @mouseleave="showExploreMenu = false">
+          <button class="nav-link explore-btn">
+            Explore
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-left: 2px; vertical-align: middle;"><polyline points="6 9 12 15 18 9"></polyline></svg>
+          </button>
+          
+          <Transition name="dropdown">
+            <div v-show="showExploreMenu" class="explore-dropdown">
+              <RouterLink to="/timeline" class="dropdown-item">Timeline</RouterLink>
+              <RouterLink to="/board" class="dropdown-item">Investigation</RouterLink>
+              <RouterLink to="/vs" class="dropdown-item">Adaptations</RouterLink>
+            </div>
+          </Transition>
+        </div>
       </nav>
 
       <div class="nav-right">
@@ -257,6 +270,46 @@ onUnmounted(() => window.removeEventListener('click', onClickOutside))
 .nav-link:hover,
 .nav-link.router-link-active {
   color: var(--color-text-main);
+}
+
+.explore-dropdown-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.explore-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+}
+
+.explore-dropdown {
+  position: absolute;
+  top: calc(100% + 20px); /* Account for nav height */
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: var(--color-bg);
+  border: 1px solid var(--color-border);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  min-width: 180px;
+  overflow: hidden;
+}
+
+/* Connect the gap between button and dropdown so hover doesn't break */
+.explore-dropdown-container::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  height: 25px;
 }
 
 .auth-link {

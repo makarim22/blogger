@@ -198,3 +198,47 @@ export const uploadImage = async (file: File): Promise<string> => {
   const data = await res.json();
   return `${API_URL}${data.url}`;
 };
+
+export const fetchMovieComments = async (movieId: string): Promise<any[]> => {
+  try {
+    const res = await fetch(`${API_URL}/comments/movie/${movieId}`);
+    if (!res.ok) throw new Error('Failed to fetch comments');
+    return res.json();
+  } catch (err) {
+    console.error(err);
+    return [];
+  }
+};
+
+export const fetchBookComments = async (bookId: string): Promise<any[]> => {
+  try {
+    const res = await fetch(`${API_URL}/comments/book/${bookId}`);
+    if (!res.ok) throw new Error('Failed to fetch comments');
+    return res.json();
+  } catch (err) {
+    console.error(err);
+    return [];
+  }
+};
+
+export const postComment = async (data: { content: string; authorName?: string; movieReviewId?: string; bookReviewId?: string }): Promise<any> => {
+  const res = await fetch(`${API_URL}/comments`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error('Failed to post comment');
+  return res.json();
+};
+
+export const globalSearch = async (query: string): Promise<any[]> => {
+  if (!query) return [];
+  try {
+    const res = await fetch(`${API_URL}/search?q=${encodeURIComponent(query)}`);
+    if (!res.ok) throw new Error('Search failed');
+    return res.json();
+  } catch (err) {
+    console.error(err);
+    return [];
+  }
+};

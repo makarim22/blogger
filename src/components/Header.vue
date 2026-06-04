@@ -4,6 +4,7 @@ import { RouterLink, useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import { toast } from 'vue3-toastify'
 import { useTheme } from '../composables/useTheme'
+import GlobalSearch from './GlobalSearch.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -50,6 +51,9 @@ onUnmounted(() => window.removeEventListener('click', onClickOutside))
       </nav>
 
       <div class="nav-right">
+        <!-- Global Search -->
+        <GlobalSearch class="global-search-component" />
+
         <!-- Theme Toggle -->
         <button class="icon-btn theme-btn" @click="toggleTheme" :title="isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'">
           <!-- Sun icon (light mode active) -->
@@ -148,6 +152,10 @@ onUnmounted(() => window.removeEventListener('click', onClickOutside))
   justify-content: flex-end;
   align-items: center;
   gap: 16px;
+}
+
+.global-search-component {
+  margin-right: 8px;
 }
 
 .nav-link {

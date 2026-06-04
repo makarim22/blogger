@@ -5,6 +5,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/vue-query'
 import { createMovie, createBook, fetchMovie, fetchBook, updateMovie, updateBook, uploadImage } from '../services/api'
 import { useHead } from '@unhead/vue'
 import { toast } from 'vue3-toastify'
+import { marked } from 'marked'
+import DOMPurify from 'dompurify'
 
 const route = useRoute()
 const router = useRouter()
@@ -34,6 +36,12 @@ const review = ref('')
 const selectedFile = ref<File | null>(null)
 const imagePreviewUrl = ref<string | null>(null)
 const isSubmitting = ref(false)
+
+const activeTab = ref<'write' | 'preview'>('write')
+const parsedReviewPreview = computed(() => {
+  if (!review.value) return ''
+  return DOMPurify.sanitize(marked.parse(review.value) as string)
+})
 
 // Populate form state in edit mode
 watch(existingReview, (newVal) => {
@@ -334,16 +342,29 @@ const handleSubmit = async () => {
         <span class="divider-text">The Critique</span>
       </div>
 
+      <!-- Editor Tabs -->
+      <div class="editor-tabs">
+        <button type="button" class="tab-btn" :class="{'active': activeTab === 'write'}" @click="activeTab = 'write'">Write</button>
+        <button type="button" class="tab-btn" :class="{'active': activeTab === 'preview'}" @click="activeTab = 'preview'">Preview</button>
+      </div>
+
       <!-- Review body -->
       <div class="field-group">
-        <textarea
-          v-model="review"
-          class="review-textarea"
-          placeholder="Write your full editorial critique here. The first letter will be displayed as a large drop cap on the published page..."
-          rows="14"
-          required
-        ></textarea>
-        <p class="review-hint">{{ review.length }} characters</p>
+        <div v-show="activeTab === 'write'">
+          <textarea
+            v-model="review"
+            class="review-textarea"
+            placeholder="Write your full editorial critique using Markdown. The first letter will be displayed as a large drop cap..."
+            rows="14"
+            required
+          ></textarea>
+          <p class="review-hint">Markdown supported. {{ review.length }} characters</p>
+        </div>
+        
+        <div v-show="activeTab === 'preview'" class="preview-area editorial-content">
+          <div v-if="!review" class="preview-empty">Nothing to preview.</div>
+          <div v-else v-html="parsedReviewPreview"></div>
+        </div>
       </div>
 
       <!-- Actions -->
@@ -715,6 +736,80 @@ const handleSubmit = async () => {
 .review-textarea::placeholder {
   color: var(--color-text-light);
   font-style: italic;
+}
+
+.editor-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: -16px;
+  z-index: 10;
+}
+
+.tab-btn {
+  background: transparent;
+  border: none;
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  padding: 8px 16px;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s;
+}
+
+.tab-btn:hover {
+  color: var(--color-text-main);
+}
+
+.tab-btn.active {
+  color: var(--color-text-main);
+  border-bottom-color: var(--color-text-main);
+}
+
+.preview-area {
+  width: 100%;
+  font-family: var(--font-serif);
+  font-size: 1.2rem;
+  line-height: 1.9;
+  color: var(--color-text-main);
+  background: transparent;
+  border-top: 1px solid var(--color-border);
+  padding: 20px 0;
+  min-height: 400px;
+}
+
+.preview-empty {
+  color: var(--color-text-light);
+  font-style: italic;
+  font-family: var(--font-sans);
+  font-size: 1rem;
+}
+
+.editorial-content :deep(p) {
+  margin-bottom: 1.5em;
+}
+.editorial-content :deep(h1), .editorial-content :deep(h2), .editorial-content :deep(h3) {
+  font-family: var(--font-sans);
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
+}
+.editorial-content :deep(ul), .editorial-content :deep(ol) {
+  margin-bottom: 1.5em;
+  padding-left: 20px;
+}
+.editorial-content :deep(blockquote) {
+  border-left: 4px solid var(--color-accent);
+  padding-left: 16px;
+  font-style: italic;
+  color: var(--color-text-muted);
+  margin: 1.5em 0;
+}
+.editorial-content :deep(a) {
+  color: var(--color-accent);
+  text-decoration: underline;
 }
 
 .review-hint {

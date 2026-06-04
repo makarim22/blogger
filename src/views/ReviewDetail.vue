@@ -4,9 +4,12 @@ import { useRoute, useRouter, RouterLink } from 'vue-router'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/vue-query'
 import { fetchMovie, fetchBook, deleteMovie, deleteBook } from '../services/api'
 import FinalVerdict from '../components/FinalVerdict.vue'
+import CommentSection from '../components/CommentSection.vue'
 import { useHead } from '@unhead/vue'
 import { useAuthStore } from '../stores/auth'
 import { toast } from 'vue3-toastify'
+import { marked } from 'marked'
+import DOMPurify from 'dompurify'
 
 const route = useRoute()
 const router = useRouter()
@@ -32,7 +35,8 @@ const processedItem = computed(() => {
     displayCreator: type === 'movies' ? base.director : base.author,
     image: type === 'movies' ? base.posterUrl : base.coverUrl,
     dateLabel: type === 'movies' ? 'Watched' : 'Read',
-    dateValue: new Date(type === 'movies' ? base.watchDate : base.readDate).toLocaleDateString()
+    dateValue: new Date(type === 'movies' ? base.watchDate : base.readDate).toLocaleDateString(),
+    parsedReview: DOMPurify.sanitize(marked.parse(base.review) as string)
   }
 })
 
@@ -85,9 +89,7 @@ useHead({
     </header>
 
     <main class="container-narrow editorial-content">
-      <p class="dropcap">
-        {{ processedItem.review }}
-      </p>
+      <div class="dropcap" v-html="processedItem.parsedReview"></div>
 
       <FinalVerdict 
         :rating="processedItem.rating" 
@@ -103,6 +105,8 @@ useHead({
           {{ deleteMutation.isPending.value ? 'Deleting...' : 'Delete Critique' }}
         </button>
       </div>
+
+      <CommentSection :type="(type as 'movies' | 'books')" :id="id" />
     </main>
   </div>
   
@@ -209,12 +213,32 @@ useHead({
   margin-bottom: 100px;
 }
 
-.dropcap {
-  white-space: pre-wrap; /* to preserve newlines from textarea */
+.editorial-content :deep(p) {
+  margin-bottom: 1.5em;
+}
+.editorial-content :deep(h1), .editorial-content :deep(h2), .editorial-content :deep(h3) {
+  font-family: var(--font-sans);
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
+}
+.editorial-content :deep(ul), .editorial-content :deep(ol) {
+  margin-bottom: 1.5em;
+  padding-left: 20px;
+}
+.editorial-content :deep(blockquote) {
+  border-left: 4px solid var(--color-accent);
+  padding-left: 16px;
+  font-style: italic;
+  color: var(--color-text-muted);
+  margin: 1.5em 0;
+}
+.editorial-content :deep(a) {
+  color: var(--color-accent);
+  text-decoration: underline;
 }
 
-/* Pseudo-element for dropcap on the first letter */
-.dropcap::first-letter {
+/* Pseudo-element for dropcap on the first letter of the first paragraph */
+.dropcap :deep(p:first-of-type)::first-letter {
   font-size: 4.5rem;
   font-weight: 900;
   float: left;

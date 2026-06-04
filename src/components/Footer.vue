@@ -33,10 +33,11 @@
 
 <style scoped>
 .footer {
-  background-color: #1a1a1b; /* Deep Charcoal */
-  color: #f9f9f7;
+  background-color: var(--color-surface);
+  color: var(--color-text-main);
   padding-top: 80px;
   margin-top: 80px;
+  border-top: 1px solid var(--color-border);
 }
 
 .footer-content {
@@ -94,20 +95,20 @@
 
 .link-group a {
   font-family: var(--font-sans);
-  color: #a1a1aa;
+  color: var(--color-text-muted);
   font-size: 0.95rem;
   transition: color 0.2s;
 }
 
 .link-group a:hover {
-  color: #f9f9f7;
+  color: var(--color-text-main);
 }
 
 .footer-bottom {
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: 1px solid var(--color-border);
   padding: 24px 0;
   text-align: center;
   font-size: 0.85rem;
-  color: #52525b;
+  color: var(--color-text-muted);
 }
 </style>

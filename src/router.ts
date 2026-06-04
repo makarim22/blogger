@@ -11,6 +11,7 @@ import AboutView from './views/AboutView.vue'
 import PrivacyView from './views/PrivacyView.vue'
 import TermsView from './views/TermsView.vue'
 import GuidelinesView from './views/GuidelinesView.vue'
+import RedStringBoard from './views/RedStringBoard.vue'
 
 // Auth guard for editor-only routes
 const requireAuth = (_to: any, _from: any, next: Function) => {
@@ -81,6 +82,11 @@ const router = createRouter({
       path: '/timeline',
       name: 'timeline',
       component: TimelineView
+    },
+    {
+      path: '/board',
+      name: 'board',
+      component: RedStringBoard
     },
     {
       path: '/login',

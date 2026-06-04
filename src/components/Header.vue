@@ -69,6 +69,7 @@ onUnmounted(() => window.removeEventListener('click', onClickOutside))
         <RouterLink to="/movies" class="nav-link">Cinema</RouterLink>
         <RouterLink to="/books" class="nav-link">Literature</RouterLink>
         <RouterLink to="/timeline" class="nav-link">Timeline</RouterLink>
+        <RouterLink to="/board" class="nav-link">Investigation</RouterLink>
       </nav>
 
       <div class="nav-right">

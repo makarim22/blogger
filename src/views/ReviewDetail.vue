@@ -257,6 +257,12 @@ useHead({
                class="btn-trailer">
               ▶ Watch Trailer
             </a>
+            <a v-else 
+               :href="`https://www.goodreads.com/search?q=${encodeURIComponent(processedItem.displayTitle + ' ' + processedItem.displayCreator)}`" 
+               target="_blank" 
+               class="btn-trailer">
+              ▶ Find on Goodreads
+            </a>
           </div>
         </div>
       </div>

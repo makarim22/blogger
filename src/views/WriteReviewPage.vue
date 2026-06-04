@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { useMutation, useQueryClient } from '@tanstack/vue-query'
-import { createMovie, createBook, uploadImage } from '../services/api'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/vue-query'
+import { createMovie, createBook, fetchMovie, fetchBook, updateMovie, updateBook, uploadImage } from '../services/api'
 import { useHead } from '@unhead/vue'
 import { toast } from 'vue3-toastify'
 
@@ -12,9 +12,15 @@ const queryClient = useQueryClient()
 
 const type = computed(() => route.params.type as 'movies' | 'books')
 const isMovie = computed(() => type.value === 'movies')
+const isEdit = computed(() => route.name === 'edit')
+const id = computed(() => route.params.id as string)
 
-useHead({
-  title: () => isMovie.value ? 'Write Cinema Critique | Literary Noir' : 'Write Literature Critique | Literary Noir'
+// Fetch existing review for editing
+const { data: existingReview, isLoading: isLoadingExisting } = useQuery<any>({
+  queryKey: computed(() => ['review', type.value, id.value]),
+  queryFn: () => type.value === 'movies' ? fetchMovie(id.value) : fetchBook(id.value),
+  enabled: computed(() => isEdit.value && !!id.value),
+  staleTime: 0,
 })
 
 // Form state
@@ -28,6 +34,29 @@ const review = ref('')
 const selectedFile = ref<File | null>(null)
 const imagePreviewUrl = ref<string | null>(null)
 const isSubmitting = ref(false)
+
+// Populate form state in edit mode
+watch(existingReview, (newVal) => {
+  if (newVal) {
+    title.value = newVal.title
+    creator.value = isMovie.value ? newVal.director : newVal.author
+    year.value = isMovie.value ? newVal.releaseYear : newVal.publishYear
+    rating.value = newVal.rating
+    theGood.value = newVal.theGood || ''
+    theBad.value = newVal.theBad || ''
+    review.value = newVal.review
+    imagePreviewUrl.value = isMovie.value ? newVal.posterUrl || null : newVal.coverUrl || null
+  }
+}, { immediate: true })
+
+useHead({
+  title: () => {
+    if (isEdit.value) {
+      return isMovie.value ? 'Edit Cinema Critique | Literary Noir' : 'Edit Literature Critique | Literary Noir'
+    }
+    return isMovie.value ? 'Write Cinema Critique | Literary Noir' : 'Write Literature Critique | Literary Noir'
+  }
+})
 
 // Star rating display (convert 10-scale to 5-star)
 const starDisplay = computed(() => {
@@ -69,6 +98,34 @@ const bookMutation = useMutation({
   }
 })
 
+const updateMovieMutation = useMutation({
+  mutationFn: (data: any) => updateMovie(id.value, data),
+  onSuccess: () => {
+    toast.success('Cinema critique updated!')
+    queryClient.invalidateQueries({ queryKey: ['movies'] })
+    queryClient.invalidateQueries({ queryKey: ['review', 'movies', id.value] })
+    router.push(`/review/movies/${id.value}`)
+  },
+  onError: (error: Error) => {
+    toast.error(error.message || 'Failed to update critique')
+    isSubmitting.value = false
+  }
+})
+
+const updateBookMutation = useMutation({
+  mutationFn: (data: any) => updateBook(id.value, data),
+  onSuccess: () => {
+    toast.success('Literature critique updated!')
+    queryClient.invalidateQueries({ queryKey: ['books'] })
+    queryClient.invalidateQueries({ queryKey: ['review', 'books', id.value] })
+    router.push(`/review/books/${id.value}`)
+  },
+  onError: (error: Error) => {
+    toast.error(error.message || 'Failed to update critique')
+    isSubmitting.value = false
+  }
+})
+
 const handleSubmit = async () => {
   if (isSubmitting.value) return
   isSubmitting.value = true
@@ -78,32 +135,63 @@ const handleSubmit = async () => {
     if (selectedFile.value) {
       toast.info('Uploading cover image...')
       imageUrl = await uploadImage(selectedFile.value)
+    } else if (isEdit.value) {
+      imageUrl = imagePreviewUrl.value || ''
     }
 
-    if (isMovie.value) {
-      movieMutation.mutate({
-        title: title.value,
-        director: creator.value,
-        releaseYear: year.value,
-        rating: rating.value,
-        theGood: theGood.value,
-        theBad: theBad.value,
-        review: review.value,
-        watchDate: new Date().toISOString(),
-        posterUrl: imageUrl
-      })
+    const parsedYear = Number(year.value)
+    const parsedRating = Number(rating.value)
+
+    if (isEdit.value) {
+      if (isMovie.value) {
+        updateMovieMutation.mutate({
+          title: title.value,
+          director: creator.value,
+          releaseYear: parsedYear,
+          rating: parsedRating,
+          theGood: theGood.value,
+          theBad: theBad.value,
+          review: review.value,
+          posterUrl: imageUrl
+        })
+      } else {
+        updateBookMutation.mutate({
+          title: title.value,
+          author: creator.value,
+          publishYear: parsedYear,
+          rating: parsedRating,
+          theGood: theGood.value,
+          theBad: theBad.value,
+          review: review.value,
+          coverUrl: imageUrl
+        })
+      }
     } else {
-      bookMutation.mutate({
-        title: title.value,
-        author: creator.value,
-        publishYear: year.value,
-        rating: rating.value,
-        theGood: theGood.value,
-        theBad: theBad.value,
-        review: review.value,
-        readDate: new Date().toISOString(),
-        coverUrl: imageUrl
-      })
+      if (isMovie.value) {
+        movieMutation.mutate({
+          title: title.value,
+          director: creator.value,
+          releaseYear: parsedYear,
+          rating: parsedRating,
+          theGood: theGood.value,
+          theBad: theBad.value,
+          review: review.value,
+          watchDate: new Date().toISOString(),
+          posterUrl: imageUrl
+        })
+      } else {
+        bookMutation.mutate({
+          title: title.value,
+          author: creator.value,
+          publishYear: parsedYear,
+          rating: parsedRating,
+          theGood: theGood.value,
+          theBad: theBad.value,
+          review: review.value,
+          readDate: new Date().toISOString(),
+          coverUrl: imageUrl
+        })
+      }
     }
   } catch (error: any) {
     toast.error(error.message || 'Error processing request')
@@ -124,7 +212,7 @@ const handleSubmit = async () => {
             {{ isMovie ? 'Cinema' : 'Literature' }}
           </RouterLink>
           <span class="breadcrumb-sep">/</span>
-          <span class="breadcrumb-current">New Critique</span>
+          <span class="breadcrumb-current">{{ isEdit ? 'Edit Critique' : 'New Critique' }}</span>
         </div>
 
         <div class="type-badge">
@@ -134,7 +222,10 @@ const handleSubmit = async () => {
       </div>
     </div>
 
-    <form @submit.prevent="handleSubmit" class="write-form container-narrow">
+    <div v-if="isEdit && isLoadingExisting" class="container-narrow loading">
+      Retrieving archive for edit...
+    </div>
+    <form v-else @submit.prevent="handleSubmit" class="write-form container-narrow">
 
       <!-- Cover Image Upload -->
       <div class="cover-upload-area" :class="{ 'has-preview': imagePreviewUrl }">
@@ -257,7 +348,7 @@ const handleSubmit = async () => {
 
       <!-- Actions -->
       <div class="actions-bar">
-        <RouterLink :to="isMovie ? '/movies' : '/books'" class="btn-outline">
+        <RouterLink :to="isEdit ? `/review/${type}/${id}` : (isMovie ? '/movies' : '/books')" class="btn-outline">
           Discard
         </RouterLink>
         <button
@@ -265,7 +356,7 @@ const handleSubmit = async () => {
           class="btn-primary"
           :disabled="isSubmitting"
         >
-          {{ isSubmitting ? 'Publishing...' : 'Publish Critique' }}
+          {{ isSubmitting ? (isEdit ? 'Saving...' : 'Publishing...') : (isEdit ? 'Save Changes' : 'Publish Critique') }}
         </button>
       </div>
     </form>
@@ -646,5 +737,14 @@ const handleSubmit = async () => {
 .btn-primary:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.loading {
+  text-align: center;
+  padding: 100px 20px;
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 1.5rem;
+  color: var(--color-text-muted);
 }
 </style>

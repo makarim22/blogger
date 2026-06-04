@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRoute, useRouter, RouterLink } from 'vue-router'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/vue-query'
 import { fetchMovie, fetchBook, deleteMovie, deleteBook } from '../services/api'
 import FinalVerdict from '../components/FinalVerdict.vue'
@@ -96,6 +96,9 @@ useHead({
       />
 
       <div v-if="authStore.isLoggedIn" class="editor-actions">
+        <RouterLink :to="`/edit/${type}/${id}`" class="btn-outline btn-edit">
+          Edit Critique
+        </RouterLink>
         <button @click="handleDelete" class="btn-outline btn-delete" :disabled="deleteMutation.isPending.value">
           {{ deleteMutation.isPending.value ? 'Deleting...' : 'Delete Critique' }}
         </button>
@@ -225,6 +228,22 @@ useHead({
   margin-top: 60px;
   display: flex;
   justify-content: center;
+  gap: 16px;
+}
+
+.btn-edit {
+  border-color: var(--color-text-main);
+  color: var(--color-text-main);
+  padding: 10px 20px;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  transition: all 0.2s ease;
+}
+
+.btn-edit:hover {
+  background-color: var(--color-text-main);
+  color: var(--color-bg);
 }
 
 .btn-delete {

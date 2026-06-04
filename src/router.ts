@@ -55,6 +55,12 @@ const router = createRouter({
       beforeEnter: requireAuth
     },
     {
+      path: '/edit/:type/:id',
+      name: 'edit',
+      component: WriteReviewPage,
+      beforeEnter: requireAuth
+    },
+    {
       path: '/stats',
       name: 'stats',
       component: StatsView

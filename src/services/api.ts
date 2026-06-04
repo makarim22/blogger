@@ -48,6 +48,17 @@ const getHeaders = () => {
   };
 };
 
+const checkResponse = (res: Response, fallbackMsg: string) => {
+  if (res.status === 401) {
+    localStorage.removeItem('auth_token');
+    // Force redirect to login page or reload to update Pinia store if user is on page
+    window.location.href = '/login';
+    throw new Error('Your session has expired. Please log in again.');
+  }
+  if (!res.ok) throw new Error(fallbackMsg);
+  return res;
+};
+
 export const fetchPosts = async (): Promise<Post[]> => {
   try {
     const response = await fetch(`${API_URL}/posts`);
@@ -120,7 +131,7 @@ export const createMovie = async (data: Omit<MovieReview, 'id' | 'authorId'>): P
     headers: getHeaders(),
     body: JSON.stringify(data),
   });
-  if (!res.ok) throw new Error('Failed to create movie');
+  checkResponse(res, 'Failed to create movie');
   return res.json();
 };
 
@@ -129,7 +140,7 @@ export const deleteMovie = async (id: string): Promise<void> => {
     method: 'DELETE',
     headers: getHeaders(),
   });
-  if (!res.ok) throw new Error('Failed to delete movie');
+  checkResponse(res, 'Failed to delete movie');
 };
 
 export const createBook = async (data: Omit<BookReview, 'id' | 'authorId'>): Promise<BookReview> => {
@@ -138,7 +149,7 @@ export const createBook = async (data: Omit<BookReview, 'id' | 'authorId'>): Pro
     headers: getHeaders(),
     body: JSON.stringify(data),
   });
-  if (!res.ok) throw new Error('Failed to create book');
+  checkResponse(res, 'Failed to create book');
   return res.json();
 };
 
@@ -147,7 +158,27 @@ export const deleteBook = async (id: string): Promise<void> => {
     method: 'DELETE',
     headers: getHeaders(),
   });
-  if (!res.ok) throw new Error('Failed to delete book');
+  checkResponse(res, 'Failed to delete book');
+};
+
+export const updateMovie = async (id: string, data: Partial<Omit<MovieReview, 'id' | 'authorId'>>): Promise<MovieReview> => {
+  const res = await fetch(`${API_URL}/movies/${id}`, {
+    method: 'PATCH',
+    headers: getHeaders(),
+    body: JSON.stringify(data),
+  });
+  checkResponse(res, 'Failed to update movie');
+  return res.json();
+};
+
+export const updateBook = async (id: string, data: Partial<Omit<BookReview, 'id' | 'authorId'>>): Promise<BookReview> => {
+  const res = await fetch(`${API_URL}/books/${id}`, {
+    method: 'PATCH',
+    headers: getHeaders(),
+    body: JSON.stringify(data),
+  });
+  checkResponse(res, 'Failed to update book');
+  return res.json();
 };
 
 export const uploadImage = async (file: File): Promise<string> => {
@@ -163,7 +194,7 @@ export const uploadImage = async (file: File): Promise<string> => {
     headers,
     body: formData,
   });
-  if (!res.ok) throw new Error('Failed to upload image');
+  checkResponse(res, 'Failed to upload image');
   const data = await res.json();
   return `${API_URL}${data.url}`;
 };

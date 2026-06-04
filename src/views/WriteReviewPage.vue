@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/vue-query'
 import { createMovie, createBook, fetchMovie, fetchBook, updateMovie, updateBook, uploadImage } from '../services/api'
@@ -43,6 +43,94 @@ const parsedReviewPreview = computed(() => {
   return DOMPurify.sanitize(marked.parse(review.value) as string)
 })
 
+// Typewriter Mode Features
+const wordCount = computed(() => {
+  if (!review.value.trim()) return 0
+  return review.value.trim().split(/\s+/).length
+})
+
+const readTime = computed(() => {
+  const wordsPerMinute = 200
+  const minutes = Math.max(1, Math.ceil(wordCount.value / wordsPerMinute))
+  return `${minutes} min read`
+})
+
+// Web Audio API Typewriter Click (Zero network lag, 100% reliable)
+let audioCtx: AudioContext | null = null
+
+const playTypewriterSound = () => {
+  try {
+    if (!audioCtx) {
+      audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)()
+    }
+    
+    if (audioCtx.state === 'suspended') {
+      audioCtx.resume()
+    }
+    
+    const time = audioCtx.currentTime
+    
+    // Oscillator for the mechanical "clack" body
+    const osc = audioCtx.createOscillator()
+    osc.type = 'square'
+    osc.frequency.setValueAtTime(100 + Math.random() * 50, time) // slight variation per keystroke
+    osc.frequency.exponentialRampToValueAtTime(40, time + 0.03)
+    
+    const oscGain = audioCtx.createGain()
+    oscGain.gain.setValueAtTime(0.3, time)
+    oscGain.gain.exponentialRampToValueAtTime(0.01, time + 0.03)
+    
+    osc.connect(oscGain)
+    oscGain.connect(audioCtx.destination)
+    
+    // Noise burst for the metallic "snap"
+    const bufferSize = audioCtx.sampleRate * 0.03 
+    const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate)
+    const data = buffer.getChannelData(0)
+    for (let i = 0; i < bufferSize; i++) {
+      data[i] = Math.random() * 2 - 1
+    }
+    
+    const noise = audioCtx.createBufferSource()
+    noise.buffer = buffer
+    
+    const filter = audioCtx.createBiquadFilter()
+    filter.type = 'highpass'
+    filter.frequency.value = 1500
+    
+    const noiseGain = audioCtx.createGain()
+    noiseGain.gain.setValueAtTime(0.4, time)
+    noiseGain.gain.exponentialRampToValueAtTime(0.01, time + 0.03)
+    
+    noise.connect(filter)
+    filter.connect(noiseGain)
+    noiseGain.connect(audioCtx.destination)
+    
+    osc.start(time)
+    osc.stop(time + 0.03)
+    noise.start(time)
+  } catch (e) {
+    // Ignore audio errors silently
+  }
+}
+
+// Auto-save Drafts
+const draftKey = computed(() => `draft_${type.value}_${id.value || 'new'}`)
+
+watch(review, (newVal) => {
+  if (newVal) localStorage.setItem(draftKey.value, newVal)
+})
+
+onMounted(() => {
+  if (!isEdit.value) {
+    const draft = localStorage.getItem(draftKey.value)
+    if (draft && !review.value) {
+      review.value = draft
+      toast.info('Draft restored from local storage')
+    }
+  }
+})
+
 // Populate form state in edit mode
 watch(existingReview, (newVal) => {
   if (newVal) {
@@ -84,6 +172,7 @@ const movieMutation = useMutation({
   mutationFn: createMovie,
   onSuccess: (data) => {
     toast.success('Cinema critique published!')
+    localStorage.removeItem(draftKey.value)
     queryClient.invalidateQueries({ queryKey: ['movies'] })
     router.push(`/review/movies/${data.id}`)
   },
@@ -97,6 +186,7 @@ const bookMutation = useMutation({
   mutationFn: createBook,
   onSuccess: (data) => {
     toast.success('Literature critique published!')
+    localStorage.removeItem(draftKey.value)
     queryClient.invalidateQueries({ queryKey: ['books'] })
     router.push(`/review/books/${data.id}`)
   },
@@ -110,6 +200,7 @@ const updateMovieMutation = useMutation({
   mutationFn: (data: any) => updateMovie(id.value, data),
   onSuccess: () => {
     toast.success('Cinema critique updated!')
+    localStorage.removeItem(draftKey.value)
     queryClient.invalidateQueries({ queryKey: ['movies'] })
     queryClient.invalidateQueries({ queryKey: ['review', 'movies', id.value] })
     router.push(`/review/movies/${id.value}`)
@@ -124,6 +215,7 @@ const updateBookMutation = useMutation({
   mutationFn: (data: any) => updateBook(id.value, data),
   onSuccess: () => {
     toast.success('Literature critique updated!')
+    localStorage.removeItem(draftKey.value)
     queryClient.invalidateQueries({ queryKey: ['books'] })
     queryClient.invalidateQueries({ queryKey: ['review', 'books', id.value] })
     router.push(`/review/books/${id.value}`)
@@ -353,12 +445,17 @@ const handleSubmit = async () => {
         <div v-show="activeTab === 'write'">
           <textarea
             v-model="review"
-            class="review-textarea"
+            @keydown="playTypewriterSound"
+            class="review-textarea typewriter-mode"
             placeholder="Write your full editorial critique using Markdown. The first letter will be displayed as a large drop cap..."
-            rows="14"
+            rows="18"
             required
           ></textarea>
-          <p class="review-hint">Markdown supported. {{ review.length }} characters</p>
+          <div class="editor-stats">
+            <span class="editor-stat-item">Typewriter Mode Active ⌨️</span>
+            <span class="editor-stat-item">{{ wordCount }} words</span>
+            <span class="editor-stat-item">{{ readTime }}</span>
+          </div>
         </div>
         
         <div v-show="activeTab === 'preview'" class="preview-area editorial-content">
@@ -712,30 +809,47 @@ const handleSubmit = async () => {
   white-space: nowrap;
 }
 
-/* Review textarea */
-.review-textarea {
+/* Typewriter Mode Textarea */
+.review-textarea.typewriter-mode {
   width: 100%;
-  font-family: var(--font-serif);
-  font-size: 1.2rem;
-  line-height: 1.9;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 1.15rem;
+  line-height: 1.8;
   color: var(--color-text-main);
-  background: transparent;
-  border: none;
-  border-top: 1px solid var(--color-border);
-  padding: 20px 0;
+  background-color: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  padding: 40px;
   resize: vertical;
   outline: none;
-  transition: border-color 0.2s;
-  border-radius: 0;
+  transition: all 0.3s ease;
+  box-shadow: inset 0 2px 15px rgba(0,0,0,0.05);
 }
 
-.review-textarea:focus {
-  border-top-color: var(--color-text-main);
+.review-textarea.typewriter-mode:focus {
+  border-color: var(--color-text-main);
+  box-shadow: inset 0 2px 15px rgba(0,0,0,0.1), 0 0 0 1px var(--color-text-main);
 }
 
-.review-textarea::placeholder {
+.review-textarea.typewriter-mode::placeholder {
   color: var(--color-text-light);
+  font-family: var(--font-sans);
   font-style: italic;
+}
+
+.editor-stats {
+  display: flex;
+  gap: 24px;
+  margin-top: 12px;
+  justify-content: flex-end;
+}
+
+.editor-stat-item {
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--color-text-muted);
 }
 
 .editor-tabs {

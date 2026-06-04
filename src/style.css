@@ -75,13 +75,6 @@ body {
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   transition: background-color 0.3s ease, color 0.3s ease;
-  padding-bottom: 70px; /* Space for Mobile Nav Bar */
-}
-
-@media (min-width: 768px) {
-  body {
-    padding-bottom: 0;
-  }
 }
 
 h1, h2, h3, h4, h5, h6 {

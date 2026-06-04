@@ -12,6 +12,7 @@ const { currentTheme, toggleTheme } = useTheme()
 
 const showWriteMenu = ref(false)
 const showExploreMenu = ref(false)
+const showMobileMenu = ref(false)
 const isAmbientPlaying = ref(false)
 const audioRef = ref<HTMLAudioElement | null>(null)
 
@@ -40,6 +41,14 @@ const toggleWriteMenu = () => {
 
 const closeWriteMenu = () => {
   showWriteMenu.value = false
+}
+
+const toggleMobileMenu = () => {
+  showMobileMenu.value = !showMobileMenu.value
+}
+
+const closeMobileMenu = () => {
+  showMobileMenu.value = false
 }
 
 const handleLogout = () => {
@@ -162,13 +171,40 @@ onUnmounted(() => window.removeEventListener('click', onClickOutside))
         </div>
 
         <template v-if="authStore.isLoggedIn">
-          <RouterLink to="/profile" class="nav-link auth-link">Dossier</RouterLink>
-          <button @click="handleLogout" class="nav-link auth-link btn-logout">Logout</button>
+          <RouterLink to="/profile" class="nav-link auth-link desktop-auth">Dossier</RouterLink>
+          <button @click="handleLogout" class="nav-link auth-link btn-logout desktop-auth">Logout</button>
         </template>
-        <RouterLink v-else to="/login" class="nav-link auth-link">Editor</RouterLink>
+        <RouterLink v-else to="/login" class="nav-link auth-link desktop-auth">Editor</RouterLink>
+        
+        <!-- Mobile Menu Toggle -->
+        <button class="icon-btn mobile-menu-btn" @click="toggleMobileMenu">
+          <svg v-if="!showMobileMenu" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="12" x2="20" y2="12"></line><line x1="4" y1="6" x2="20" y2="6"></line><line x1="4" y1="18" x2="20" y2="18"></line></svg>
+          <svg v-else xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
       </div>
     </div>
     <div class="header-border"></div>
+
+    <!-- Mobile Full Screen Menu Overlay -->
+    <Transition name="fade">
+      <div v-if="showMobileMenu" class="mobile-menu-overlay">
+        <nav class="mobile-nav-links">
+          <RouterLink to="/" class="mobile-nav-item" @click="closeMobileMenu">Home</RouterLink>
+          <RouterLink to="/movies" class="mobile-nav-item" @click="closeMobileMenu">Cinema</RouterLink>
+          <RouterLink to="/books" class="mobile-nav-item" @click="closeMobileMenu">Literature</RouterLink>
+          <div class="mobile-nav-divider"></div>
+          <RouterLink to="/timeline" class="mobile-nav-item" @click="closeMobileMenu">Timeline</RouterLink>
+          <RouterLink to="/board" class="mobile-nav-item" @click="closeMobileMenu">Investigation Board</RouterLink>
+          <RouterLink to="/vs" class="mobile-nav-item" @click="closeMobileMenu">Adaptations</RouterLink>
+          <div class="mobile-nav-divider"></div>
+          <template v-if="authStore.isLoggedIn">
+            <RouterLink to="/profile" class="mobile-nav-item" @click="closeMobileMenu">Editor Dossier</RouterLink>
+            <button @click="() => { handleLogout(); closeMobileMenu(); }" class="mobile-nav-item mobile-logout-btn">Logout</button>
+          </template>
+          <RouterLink v-else to="/login" class="mobile-nav-item" @click="closeMobileMenu">Editor Login</RouterLink>
+        </nav>
+      </div>
+    </Transition>
   </header>
 </template>
 
@@ -430,14 +466,74 @@ onUnmounted(() => window.removeEventListener('click', onClickOutside))
   background-color: var(--color-border-dark);
 }
 
+.mobile-menu-btn {
+  display: none;
+  z-index: 100;
+}
+
+.mobile-menu-overlay {
+  position: fixed;
+  top: 61px; /* Below slimmer header */
+  left: 0;
+  width: 100%;
+  height: calc(100vh - 61px);
+  background-color: var(--color-bg);
+  z-index: 90;
+  display: flex;
+  flex-direction: column;
+  padding: 40px 24px;
+  overflow-y: auto;
+}
+
+.mobile-nav-links {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.mobile-nav-item {
+  font-family: var(--font-serif);
+  font-size: 2rem;
+  color: var(--color-text-main);
+  text-decoration: none;
+  font-weight: 700;
+  transition: color 0.2s;
+  background: none;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  padding: 0;
+}
+
+.mobile-nav-item:hover {
+  color: var(--color-accent);
+}
+
+.mobile-logout-btn {
+  color: var(--color-text-muted);
+}
+
+.mobile-nav-divider {
+  width: 100%;
+  height: 1px;
+  background-color: var(--color-border);
+  margin: 16px 0;
+}
+
 @media (max-width: 768px) {
   .nav-center,
   .search-hint,
-  .btn-ambient {
+  .btn-ambient,
+  .desktop-auth {
     display: none !important;
+  }
+  
+  .mobile-menu-btn {
+    display: flex;
   }
   
   .header-content {
     height: 60px; /* Slimmer header on mobile */
   }
 }
+</style>

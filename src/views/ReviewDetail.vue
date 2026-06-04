@@ -887,7 +887,7 @@ useHead({
   }
   
   .floating-actions {
-    bottom: 84px; /* Above the Mobile Navigation bar (70px + padding) */
+    bottom: 24px;
     right: 16px;
   }
   

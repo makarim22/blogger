@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, watch } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import { toast } from 'vue3-toastify'
@@ -50,6 +50,14 @@ const toggleMobileMenu = () => {
 const closeMobileMenu = () => {
   showMobileMenu.value = false
 }
+
+watch(showMobileMenu, (isOpen) => {
+  if (isOpen) {
+    document.body.style.overflow = 'hidden'
+  } else {
+    document.body.style.overflow = ''
+  }
+})
 
 const handleLogout = () => {
   authStore.logout()

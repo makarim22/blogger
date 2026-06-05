@@ -13,6 +13,7 @@ const { currentTheme, toggleTheme } = useTheme()
 const showWriteMenu = ref(false)
 const showExploreMenu = ref(false)
 const showMobileMenu = ref(false)
+const showMobileExplore = ref(false)
 const isAmbientPlaying = ref(false)
 const audioRef = ref<HTMLAudioElement | null>(null)
 
@@ -49,6 +50,7 @@ const toggleMobileMenu = () => {
 
 const closeMobileMenu = () => {
   showMobileMenu.value = false
+  showMobileExplore.value = false
 }
 
 watch(showMobileMenu, (isOpen) => {
@@ -205,9 +207,24 @@ onUnmounted(() => window.removeEventListener('click', onClickOutside))
           <RouterLink to="/movies" class="mobile-nav-item" @click="closeMobileMenu">Cinema</RouterLink>
           <RouterLink to="/books" class="mobile-nav-item" @click="closeMobileMenu">Literature</RouterLink>
           <div class="mobile-nav-divider"></div>
-          <RouterLink to="/timeline" class="mobile-nav-item" @click="closeMobileMenu">Timeline</RouterLink>
-          <RouterLink to="/board" class="mobile-nav-item" @click="closeMobileMenu">Investigation Board</RouterLink>
-          <RouterLink to="/vs" class="mobile-nav-item" @click="closeMobileMenu">Adaptations</RouterLink>
+          
+          <!-- Collapsible Explore Accordion -->
+          <div class="mobile-accordion">
+            <button @click="showMobileExplore = !showMobileExplore" class="mobile-nav-item mobile-accordion-btn">
+              Explore
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="accordion-chevron" :class="{ rotated: showMobileExplore }">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </button>
+            <Transition name="accordion">
+              <div v-show="showMobileExplore" class="mobile-accordion-content">
+                <RouterLink to="/timeline" class="mobile-sub-nav-item" @click="closeMobileMenu">Timeline</RouterLink>
+                <RouterLink to="/board" class="mobile-sub-nav-item" @click="closeMobileMenu">Investigation Board</RouterLink>
+                <RouterLink to="/vs" class="mobile-sub-nav-item" @click="closeMobileMenu">Adaptations</RouterLink>
+              </div>
+            </Transition>
+          </div>
+          
           <div class="mobile-nav-divider"></div>
           <template v-if="authStore.isLoggedIn">
             <RouterLink v-if="authStore.user?.role === 'ADMIN' || authStore.user?.role === 'EDITOR'" to="/dossier" class="mobile-nav-item" @click="closeMobileMenu">Admin Dashboard</RouterLink>
@@ -562,7 +579,97 @@ onUnmounted(() => window.removeEventListener('click', onClickOutside))
   }
   
   .header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     height: 60px; /* Slimmer header on mobile */
   }
+
+  .logo {
+    font-size: 1.25rem;
+    gap: 8px;
+  }
+
+  .brand-logo-img {
+    height: 36px;
+  }
+}
+
+@media (max-width: 480px) {
+  .logo span {
+    display: none;
+  }
+}
+
+/* Mobile Accordion Styles */
+.mobile-accordion {
+  width: 100%;
+}
+
+.mobile-accordion-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--color-text-main);
+}
+
+.accordion-chevron {
+  transition: transform 0.25s ease;
+}
+
+.accordion-chevron.rotated {
+  transform: rotate(180deg);
+}
+
+.mobile-accordion-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  padding: 16px 0 8px;
+}
+
+.mobile-sub-nav-item {
+  font-family: var(--font-serif);
+  font-size: 1.4rem;
+  color: var(--color-text-muted);
+  text-decoration: none;
+  font-weight: 600;
+  transition: color 0.2s;
+}
+
+.mobile-sub-nav-item:hover {
+  color: var(--color-accent);
+}
+
+/* Transitions */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+  transform: translateY(-15px);
+}
+
+.accordion-enter-active,
+.accordion-leave-active {
+  transition: opacity 0.25s ease, transform 0.25s ease;
+  max-height: 200px;
+  overflow: hidden;
+}
+
+.accordion-enter-from,
+.accordion-leave-to {
+  opacity: 0;
+  transform: translateY(-10px);
+  max-height: 0;
 }
 </style>

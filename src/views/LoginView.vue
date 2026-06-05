@@ -4,7 +4,7 @@ import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import { toast } from 'vue3-toastify'
 
-import { login } from '../services/api'
+import { login, API_URL } from '../services/api'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -30,7 +30,7 @@ const handleLogin = async () => {
 }
 
 const handleGoogleLogin = () => {
-  window.location.href = 'http://localhost:3000/auth/google'
+  window.location.href = `${API_URL}/auth/google/login`
 }
 </script>
 

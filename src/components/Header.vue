@@ -80,7 +80,10 @@ onUnmounted(() => window.removeEventListener('click', onClickOutside))
   <header class="header">
     <div class="header-content container">
       <div class="nav-brand">
-        <RouterLink to="/" class="logo">LITERARY NOIR</RouterLink>
+        <RouterLink to="/" class="logo">
+          <img src="/logo.png" alt="Literary Noir Logo" class="brand-logo-img" />
+          <span>LITERARY NOIR</span>
+        </RouterLink>
       </div>
 
       <nav class="nav-center">
@@ -242,6 +245,9 @@ onUnmounted(() => window.removeEventListener('click', onClickOutside))
 }
 
 .logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
   font-family: var(--font-serif);
   font-weight: 900;
   font-size: 1.5rem;
@@ -249,6 +255,12 @@ onUnmounted(() => window.removeEventListener('click', onClickOutside))
   text-transform: uppercase;
   color: var(--color-text-main);
   transition: color 0.2s;
+}
+
+.brand-logo-img {
+  height: 44px;
+  width: auto;
+  object-fit: contain;
 }
 
 .logo:hover {

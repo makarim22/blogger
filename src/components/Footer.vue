@@ -2,7 +2,10 @@
   <footer class="footer">
     <div class="container footer-content">
       <div class="footer-brand">
-        <h2 class="footer-logo">LITERARY NOIR</h2>
+        <div class="footer-logo-container">
+          <img src="/logo.png" alt="Literary Noir Logo" class="footer-logo-img" />
+          <h2 class="footer-logo">LITERARY NOIR</h2>
+        </div>
         <p class="footer-tagline">The intersection of cinematic atmosphere and intellectual critique.</p>
       </div>
       
@@ -58,12 +61,24 @@
   max-width: 400px;
 }
 
+.footer-logo-container {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.footer-logo-img {
+  height: 50px;
+  width: auto;
+  object-fit: contain;
+}
+
 .footer-logo {
   font-family: var(--font-serif);
   font-weight: 900;
   font-size: 1.5rem;
   letter-spacing: 0.1em;
-  margin-bottom: 16px;
 }
 
 .footer-tagline {

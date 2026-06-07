@@ -143,8 +143,8 @@ const toggleAudio = () => {
     window.speechSynthesis.cancel()
     isPlayingAudio.value = false
   } else {
-    if (!processedItem.value) return;
-    const textToRead = `${processedItem.value.displayTitle}, reviewed by ${processedItem.value.author?.name || 'The Editor'}. ${processedItem.value.review.replace(/[#*]/g, '')}`
+    const plainTextReview = processedItem.value.parsedReview.replace(/<[^>]*>?/gm, '')
+    const textToRead = `${processedItem.value.displayTitle}, reviewed by ${processedItem.value.author?.name || 'The Editor'}. ${plainTextReview}`
     
     speechUtterance = new SpeechSynthesisUtterance(textToRead)
     const voices = window.speechSynthesis.getVoices()
@@ -374,6 +374,8 @@ useHead({
   filter: blur(80px) saturate(200%);
   opacity: 0.4;
   z-index: 0;
+  will-change: filter, transform;
+  transform: translateZ(0);
 }
 
 .hero-image {
@@ -530,6 +532,32 @@ useHead({
 .editorial-content :deep(a) {
   color: var(--color-accent);
   text-decoration: underline;
+}
+.editorial-content :deep(hr) {
+  border: none;
+  height: 1px;
+  background-color: var(--color-border);
+  margin: 3em 0;
+  position: relative;
+  overflow: visible;
+}
+.editorial-content :deep(hr)::after {
+  content: "§";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: var(--color-bg);
+  padding: 0 16px;
+  color: var(--color-text-muted);
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 1.2rem;
+}
+.editorial-content :deep(strong), .editorial-content :deep(b) {
+  color: var(--color-text-main);
+  font-weight: 700;
+  box-shadow: inset 0 -4px 0 0 rgba(180, 83, 9, 0.2); /* var(--color-accent) */
 }
 
 /* Pseudo-element for dropcap on the first letter of the first paragraph */

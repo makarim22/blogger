@@ -5,6 +5,7 @@ import { fetchProfile, api } from '../services/api'
 import { useAuthStore } from '../stores/auth'
 import { useRouter, RouterLink } from 'vue-router'
 import { useHead } from '@unhead/vue'
+import MoviePoster from '../components/MoviePoster.vue'
 
 const authStore = useAuthStore()
 const router = useRouter()
@@ -292,7 +293,8 @@ useHead({
               </div>
               <div class="mixtape-covers">
                 <div v-for="item in mixtape.items.slice(0, 5)" :key="item.id" class="mixtape-cover">
-                  <img :src="item.image" :alt="item.displayTitle" />
+                  <MoviePoster v-if="item.type === 'movies'" :src="item.image" :title="item.displayTitle" :year="item.releaseYear" />
+                  <img v-else :src="item.image" :alt="item.displayTitle" />
                 </div>
                 <div v-if="mixtape.items.length > 5" class="mixtape-more">+{{ mixtape.items.length - 5 }}</div>
               </div>
@@ -311,8 +313,7 @@ useHead({
           <div v-else class="article-grid">
             <div v-for="item in myReviews.movies" :key="item.id" class="article-card" @click="router.push(`/review/movies/${item.id}`)">
               <div class="card-image">
-                <img v-if="item.posterUrl" :src="item.posterUrl" :alt="item.title" />
-                <div v-else class="placeholder-img"></div>
+                <MoviePoster :src="item.posterUrl" :title="item.title" :year="item.releaseYear" />
                 <div class="status-badge" :class="item.status.toLowerCase()">{{ item.status }}</div>
               </div>
               <div class="card-content">
@@ -355,7 +356,8 @@ useHead({
               @click="isCreatingMixtape ? toggleMixtapeSelection(item) : router.push(`/review/${item.type}/${item.id}`)"
             >
               <div class="card-image">
-                <img v-if="item.image" :src="item.image" :alt="item.displayTitle" />
+                <MoviePoster v-if="item.type === 'movies'" :src="item.image" :title="item.displayTitle" :year="item.releaseYear" />
+                <img v-else-if="item.image" :src="item.image" :alt="item.displayTitle" />
                 <div v-else class="placeholder-img"></div>
                 <div v-if="isCreatingMixtape" class="select-indicator">
                   {{ selectedMixtapeItems.includes(item.id) ? '✓' : '+' }}

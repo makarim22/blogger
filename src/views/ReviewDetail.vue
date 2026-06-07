@@ -10,6 +10,7 @@ import { useAuthStore } from '../stores/auth'
 import { toast } from 'vue3-toastify'
 import { marked } from 'marked'
 import DOMPurify from 'dompurify'
+import MoviePoster from '../components/MoviePoster.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -236,7 +237,8 @@ useHead({
         <!-- Ambient Glow Layer -->
         <img v-if="processedItem.image" :src="processedItem.image" alt="" class="hero-glow" />
         <!-- Main Image -->
-        <img v-if="processedItem.image" :src="processedItem.image" :alt="processedItem.displayTitle" class="hero-image" />
+        <MoviePoster v-if="type === 'movies'" :src="processedItem.image" :title="processedItem.displayTitle" :year="processedItem.releaseYear" customClass="hero-image" />
+        <img v-else-if="processedItem.image" :src="processedItem.image" :alt="processedItem.displayTitle" class="hero-image" />
         <div v-else class="hero-placeholder"></div>
         <div class="hero-overlay"></div>
       </div>
@@ -316,8 +318,9 @@ useHead({
               class="rec-card"
             >
               <div class="rec-image">
-                <img v-if="type === 'movies' ? rec.posterUrl : rec.coverUrl" 
-                     :src="type === 'movies' ? rec.posterUrl : rec.coverUrl" 
+                <MoviePoster v-if="type === 'movies'" :src="rec.posterUrl" :title="rec.title" :year="rec.releaseYear" />
+                <img v-else-if="rec.coverUrl" 
+                     :src="rec.coverUrl" 
                      :alt="rec.title" />
                 <div v-else class="placeholder-img"></div>
               </div>

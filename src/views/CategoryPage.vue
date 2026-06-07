@@ -3,6 +3,7 @@ import { ref, computed, toRef, onMounted, onUnmounted, watch } from 'vue'
 import { useQuery } from '@tanstack/vue-query'
 import { fetchMovies, fetchBooks } from '../services/api'
 import { useHead } from '@unhead/vue'
+import MoviePoster from '../components/MoviePoster.vue'
 import { RouterLink } from 'vue-router'
 
 const props = defineProps<{ type: 'movies' | 'books' }>()
@@ -126,8 +127,13 @@ onUnmounted(() => {
               class="article-card"
             >
               <div class="card-image">
-                <img v-if="props.type === 'movies' ? (item as any).posterUrl : (item as any).coverUrl" 
-                     :src="props.type === 'movies' ? (item as any).posterUrl : (item as any).coverUrl" 
+                <MoviePoster 
+                     v-if="props.type === 'movies'" 
+                     :src="(item as any).posterUrl" 
+                     :title="(item as any).title" 
+                     :year="(item as any).releaseYear" />
+                <img v-else-if="(item as any).coverUrl" 
+                     :src="(item as any).coverUrl" 
                      :alt="(item as any).title" />
                 <div v-else class="placeholder-img"></div>
               </div>

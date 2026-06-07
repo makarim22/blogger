@@ -6,6 +6,7 @@ import { useAuthStore } from '../stores/auth'
 import ReviewModal from '../components/ReviewModal.vue'
 import { toast } from 'vue3-toastify'
 import { useHead } from '@unhead/vue'
+import MoviePoster from '../components/MoviePoster.vue'
 
 const queryClient = useQueryClient()
 const authStore = useAuthStore()
@@ -187,7 +188,7 @@ const isEmpty = computed(() => {
       <TransitionGroup name="list" tag="div" class="media-grid">
         <template v-if="activeTab === 'movies'">
           <div class="media-card glass-panel" v-for="movie in processedMovies" :key="movie.id">
-            <img v-if="movie.posterUrl" :src="movie.posterUrl" class="media-cover" alt="Movie Poster" />
+            <MoviePoster :src="movie.posterUrl" :title="movie.title" :year="movie.releaseYear" customClass="media-cover" />
             <div class="media-content">
               <h3>{{ movie.title }} ({{ movie.releaseYear }})</h3>
               <p class="meta">Dir: {{ movie.director }}</p>

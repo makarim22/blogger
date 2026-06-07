@@ -7,6 +7,7 @@ import { useHead } from '@unhead/vue'
 import { toast } from 'vue3-toastify'
 import { marked } from 'marked'
 import DOMPurify from 'dompurify'
+import MoviePoster from '../components/MoviePoster.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -329,7 +330,8 @@ const handleSubmit = async () => {
 
       <!-- Cover Image Upload -->
       <div class="cover-upload-area" :class="{ 'has-preview': imagePreviewUrl }">
-        <img v-if="imagePreviewUrl" :src="imagePreviewUrl" class="cover-preview" alt="Cover preview" />
+        <MoviePoster v-if="isMovie" :src="imagePreviewUrl" :title="title" :year="Number(year)" customClass="cover-preview" />
+        <img v-else-if="imagePreviewUrl" :src="imagePreviewUrl" class="cover-preview" alt="Cover preview" />
         <div class="cover-upload-overlay">
           <label for="cover-upload" class="cover-upload-label">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">

@@ -1,72 +1,91 @@
-# 🎬 Literary Noir - Digital Media Archives
+# 🖋️ Literary Noir: Cinema & Literature Critique Platform
 
-A premium, brutalist-inspired web application designed for true cinephiles and bibliophiles. Built with a "Literary Noir" aesthetic, this platform elevates the standard movie/book logging experience into an immersive editorial journey.
+![Literary Noir Preview](./public/preview.png)
 
-## ✨ Core Pillars & Features
+Welcome to **Literary Noir**, a premium platform for sophisticated cinema and literature reviews. Designed with a sleek, modern aesthetic and advanced features, this application brings a deeply immersive reading and writing experience to critics and enthusiasts alike.
 
-1. **Dossier & Watchlists (Pilar 1)**
-   - Keep a detailed log of your favorite films and books.
-   - Save items to your personal watchlist using the robust backend system.
-   
-2. **"If You Liked This" Recommendations (Pilar 2)**
-   - Context-aware recommendations algorithm at the bottom of every review.
-   
-3. **Cinematic Focus Mode (Pilar 3)**
-   - Enter a distraction-free, cinematic full-screen view for long-form reading.
-   - Built-in integration with YouTube trailers for instant immersion.
+## ✨ Features
 
-4. **Editorial Immersion (Pilar 4)**
-   - **Voice of Noir:** Listen to reviews with built-in Web Speech API audio narration.
-   - **Ambient Glow:** Beautiful dynamic CSS backdrop filters adapting to poster art.
-   - **Quote Saver:** Highlight text directly on the page to save brilliant excerpts.
+### 🎨 Stunning Premium Aesthetic
+- **Glassmorphism UI**: Beautiful frosted-glass layers and dynamic backdrop blurs.
+- **Micro-animations**: Smooth staggered list transitions and responsive hover effects.
+- **Theme Engine**: Toggle between "Light", "Cinema" (Dark Mode), and "Literature" (Sepia/Cream) modes to match your reading environment.
+- **Ambient Soundscapes**: Built-in audio player featuring relaxing rain sounds for focused reading and writing.
 
-5. **Advanced Curation & Stats (Pilar 5)**
-   - **Criterion "Three Reasons":** Striking bullet-point summaries dynamically generated.
-   - **Personal Mixtapes:** Group your saved archives into custom collections via LocalStorage.
-   - **Dossier Stats:** Track your most saved directors/authors and average ratings.
+### ✍️ Powerful Editor
+- **Rich Text Engine**: Powered by Tiptap, giving you total control over headers, quotes, formatting, and lists.
+- **Typewriter Mode**: Authentic mechanical typewriter sound effects while drafting reviews for a tactile writing experience.
+- **Seamless Saving**: Easy interface for creating and managing critiques.
 
-6. **Playful Discovery (Pilar 6)**
-   - **Blind Date Roulette:** Let fate choose your next obsession directly from the homepage.
-   - **Ambient Soundscapes:** Toggle rain/lo-fi audio while browsing the archives.
-   - **Interactive Timeline:** Explore media history through a beautiful vertical timeline.
+### 🔔 Real-Time Interactivity
+- **Live Notifications**: Full WebSocket architecture (Socket.io) delivers instant "toast" alerts and updates the bell badge the moment someone comments on your work.
+- **Global Search (`Cmd+K` / `Ctrl+K`)**: Rapid, keyboard-driven search to discover reviews anywhere on the site.
+
+### 🧠 Personalized Experience
+- **Recommendation Engine**: The "For You" page curates reviews specifically tailored to your genre preferences and interaction history.
+- **Investigation Board & Timeline**: View content through unique chronological timelines or node-based visual investigation boards.
+- **Progressive Web App (PWA)**: Installable on desktop and mobile for offline access and native-like performance.
+
+---
 
 ## 🛠️ Tech Stack
 
-- **Framework:** Vue 3 (Composition API, `<script setup>`)
-- **Build Tool:** Vite
-- **Data Fetching:** `@tanstack/vue-query` for intelligent caching and optimistic updates.
-- **State Management:** Pinia (Authentication & Global states)
-- **Styling:** Vanilla CSS (Noir aesthetics, glassmorphism, Brutalist typography)
-- **Routing:** Vue Router
-- **SEO & UX:** Unhead (Meta tags), Vue3-Toastify (Notifications)
-
-## 🚀 Getting Started
-
-### Prerequisites
-Make sure you have [Node.js](https://nodejs.org/) installed.
-Ensure that the [NestJS Backend API](../nestjs) is running locally on `http://localhost:3000` and the database has been seeded.
-
-### Installation
-
-1. Clone the repository and navigate into the frontend directory:
-   ```bash
-   cd blogger
-   ```
-
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
-
-3. Start the Vite development server:
-   ```bash
-   npm run dev
-   ```
-
-4. Open your browser and visit `http://localhost:5173`.
-
-## 🔒 Authentication & Data
-To unlock Dossier saving, Mixtape creation, and administrative access, log in via the Login portal. Default test credentials can be found in the NestJS backend's `seed_batch4.js` file.
+- **Framework:** Vue 3 (Composition API) + Vite
+- **State Management:** Pinia
+- **Styling:** Vanilla CSS (CSS Variables, Flexbox, CSS Grid)
+- **Data Fetching:** `@tanstack/vue-query` for smart caching and background syncing
+- **Rich Text:** Tiptap Vue 3
+- **Real-time Engine:** Socket.io Client
+- **Data Visualization:** `vis-network` (for the Investigation Board)
+- **Deployment:** Netlify (via GitHub Actions CI/CD)
 
 ---
-*“Laugh, and the world laughs with you. Weep, and you weep alone.”*
+
+## 🚀 Local Development
+
+We use Docker Compose to make spinning up the environment incredibly smooth!
+
+### Prerequisites
+- Node.js `v20+`
+- Docker & Docker Compose (Optional, but recommended)
+
+### Method 1: Using Docker Compose (Recommended)
+You can run both the Frontend and the NestJS Backend simultaneously with hot-module reloading:
+```bash
+# In the root directory (c:\blogger):
+docker compose up -d
+```
+The frontend will be available at `http://localhost:5173`.
+
+### Method 2: Manual Start
+```bash
+npm install
+npm run dev
+```
+
+---
+
+## 🏗️ Building for Production
+
+This app uses Vite for extremely fast, optimized production builds.
+```bash
+# Type check and build
+npm run build
+
+# Preview production bundle locally
+npm run preview
+```
+
+## 🔄 CI/CD Pipeline
+
+This project is configured with robust DevOps pipelines using **GitHub Actions**.
+Every push to the `main` branch automatically:
+1. Runs strict TypeScript type-checking (`vue-tsc -b`)
+2. Builds the optimized production artifact
+3. Deploys the result seamlessly to **Netlify**
+
+*(Ensure `NETLIFY_AUTH_TOKEN` and `NETLIFY_SITE_ID` are configured in your repository secrets).*
+
+---
+
+*Built with passion for film, books, and beautiful code.*

@@ -8,6 +8,7 @@ import { toast } from 'vue3-toastify'
 import { marked } from 'marked'
 import DOMPurify from 'dompurify'
 import MoviePoster from '../components/MoviePoster.vue'
+import RichTextEditor from '../components/RichTextEditor.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -38,16 +39,11 @@ const selectedFile = ref<File | null>(null)
 const imagePreviewUrl = ref<string | null>(null)
 const isSubmitting = ref(false)
 
-const activeTab = ref<'write' | 'preview'>('write')
-const parsedReviewPreview = computed(() => {
-  if (!review.value) return ''
-  return DOMPurify.sanitize(marked.parse(review.value) as string)
-})
-
-// Typewriter Mode Features
 const wordCount = computed(() => {
   if (!review.value.trim()) return 0
-  return review.value.trim().split(/\s+/).length
+  // Basic text extraction for word count
+  const text = review.value.replace(/<[^>]*>?/gm, '')
+  return text.trim().split(/\s+/).filter(Boolean).length
 })
 
 const readTime = computed(() => {
@@ -55,65 +51,6 @@ const readTime = computed(() => {
   const minutes = Math.max(1, Math.ceil(wordCount.value / wordsPerMinute))
   return `${minutes} min read`
 })
-
-// Web Audio API Typewriter Click (Zero network lag, 100% reliable)
-let audioCtx: AudioContext | null = null
-
-const playTypewriterSound = () => {
-  try {
-    if (!audioCtx) {
-      audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)()
-    }
-    
-    if (audioCtx.state === 'suspended') {
-      audioCtx.resume()
-    }
-    
-    const time = audioCtx.currentTime
-    
-    // Oscillator for the mechanical "clack" body
-    const osc = audioCtx.createOscillator()
-    osc.type = 'square'
-    osc.frequency.setValueAtTime(100 + Math.random() * 50, time) // slight variation per keystroke
-    osc.frequency.exponentialRampToValueAtTime(40, time + 0.03)
-    
-    const oscGain = audioCtx.createGain()
-    oscGain.gain.setValueAtTime(0.3, time)
-    oscGain.gain.exponentialRampToValueAtTime(0.01, time + 0.03)
-    
-    osc.connect(oscGain)
-    oscGain.connect(audioCtx.destination)
-    
-    // Noise burst for the metallic "snap"
-    const bufferSize = audioCtx.sampleRate * 0.03 
-    const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate)
-    const data = buffer.getChannelData(0)
-    for (let i = 0; i < bufferSize; i++) {
-      data[i] = Math.random() * 2 - 1
-    }
-    
-    const noise = audioCtx.createBufferSource()
-    noise.buffer = buffer
-    
-    const filter = audioCtx.createBiquadFilter()
-    filter.type = 'highpass'
-    filter.frequency.value = 1500
-    
-    const noiseGain = audioCtx.createGain()
-    noiseGain.gain.setValueAtTime(0.4, time)
-    noiseGain.gain.exponentialRampToValueAtTime(0.01, time + 0.03)
-    
-    noise.connect(filter)
-    filter.connect(noiseGain)
-    noiseGain.connect(audioCtx.destination)
-    
-    osc.start(time)
-    osc.stop(time + 0.03)
-    noise.start(time)
-  } catch (e) {
-    // Ignore audio errors silently
-  }
-}
 
 // Auto-save Drafts
 const draftKey = computed(() => `draft_${type.value}_${id.value || 'new'}`)
@@ -436,33 +373,13 @@ const handleSubmit = async () => {
         <span class="divider-text">The Critique</span>
       </div>
 
-      <!-- Editor Tabs -->
-      <div class="editor-tabs">
-        <button type="button" class="tab-btn" :class="{'active': activeTab === 'write'}" @click="activeTab = 'write'">Write</button>
-        <button type="button" class="tab-btn" :class="{'active': activeTab === 'preview'}" @click="activeTab = 'preview'">Preview</button>
-      </div>
-
       <!-- Review body -->
       <div class="field-group">
-        <div v-show="activeTab === 'write'">
-          <textarea
-            v-model="review"
-            @keydown="playTypewriterSound"
-            class="review-textarea typewriter-mode"
-            placeholder="Write your full editorial critique using Markdown. The first letter will be displayed as a large drop cap..."
-            rows="18"
-            required
-          ></textarea>
-          <div class="editor-stats">
-            <span class="editor-stat-item">Typewriter Mode Active ⌨️</span>
-            <span class="editor-stat-item">{{ wordCount }} words</span>
-            <span class="editor-stat-item">{{ readTime }}</span>
-          </div>
-        </div>
-        
-        <div v-show="activeTab === 'preview'" class="preview-area editorial-content">
-          <div v-if="!review" class="preview-empty">Nothing to preview.</div>
-          <div v-else v-html="parsedReviewPreview"></div>
+        <RichTextEditor v-model="review" />
+        <div class="editor-stats">
+          <span class="editor-stat-item">Typewriter Mode Active ⌨️</span>
+          <span class="editor-stat-item">{{ wordCount }} words</span>
+          <span class="editor-stat-item">{{ readTime }}</span>
         </div>
       </div>
 

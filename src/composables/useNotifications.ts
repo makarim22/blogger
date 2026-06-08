@@ -1,6 +1,6 @@
 import { ref, computed } from 'vue';
 import { io, Socket } from 'socket.io-client';
-import { fetchNotifications, markNotificationAsRead, markAllNotificationsAsRead } from '../services/api';
+import { fetchNotifications, markNotificationAsRead, markAllNotificationsAsRead, API_URL } from '../services/api';
 import { useAuthStore } from '../stores/auth';
 import { toast } from 'vue3-toastify';
 
@@ -14,7 +14,7 @@ export function useNotifications() {
   const connect = () => {
     if (socket || !authStore.user?.userId) return;
 
-    socket = io('http://localhost:3000', {
+    socket = io(API_URL, {
       transports: ['websocket', 'polling'],
     });
 

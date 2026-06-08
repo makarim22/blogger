@@ -5,8 +5,6 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/vue-query'
 import { createMovie, createBook, fetchMovie, fetchBook, updateMovie, updateBook, uploadImage } from '../services/api'
 import { useHead } from '@unhead/vue'
 import { toast } from 'vue3-toastify'
-import { marked } from 'marked'
-import DOMPurify from 'dompurify'
 import MoviePoster from '../components/MoviePoster.vue'
 import RichTextEditor from '../components/RichTextEditor.vue'
 

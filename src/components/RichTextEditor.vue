@@ -92,7 +92,7 @@ watch(() => props.modelValue, (value) => {
   const isSame = editor.value?.getHTML() === value
   // We check if value is empty or not matching because initially it might be empty
   if (editor.value && !isSame && value) {
-    editor.value.commands.setContent(value, false)
+    editor.value.commands.setContent(value, { emitUpdate: false })
   }
 })
 

@@ -25,6 +25,8 @@ jobs:
 
       - name: Type Check & Build
         run: npm run build
+        env:
+          VITE_API_URL: ${{ secrets.VITE_API_URL }}
 
       - name: Deploy to Netlify
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'

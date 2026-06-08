@@ -79,7 +79,7 @@ onUnmounted(() => window.removeEventListener('click', onClickOutside))
 </script>
 
 <template>
-  <header class="header">
+  <header class="header glass-header">
     <div class="header-content container">
       <div class="nav-brand">
         <RouterLink to="/" class="logo">
@@ -89,6 +89,7 @@ onUnmounted(() => window.removeEventListener('click', onClickOutside))
       </div>
 
       <nav class="nav-center">
+        <RouterLink to="/for-you" class="nav-link">For You</RouterLink>
         <RouterLink to="/movies" class="nav-link">Cinema</RouterLink>
         <RouterLink to="/books" class="nav-link">Literature</RouterLink>
         
@@ -204,6 +205,7 @@ onUnmounted(() => window.removeEventListener('click', onClickOutside))
       <div v-if="showMobileMenu" class="mobile-menu-overlay">
         <nav class="mobile-nav-links">
           <RouterLink to="/" class="mobile-nav-item" @click="closeMobileMenu">Home</RouterLink>
+          <RouterLink to="/for-you" class="mobile-nav-item" @click="closeMobileMenu">For You</RouterLink>
           <RouterLink to="/movies" class="mobile-nav-item" @click="closeMobileMenu">Cinema</RouterLink>
           <RouterLink to="/books" class="mobile-nav-item" @click="closeMobileMenu">Literature</RouterLink>
           <div class="mobile-nav-divider"></div>
@@ -248,11 +250,12 @@ onUnmounted(() => window.removeEventListener('click', onClickOutside))
 }
 
 .header-content {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
+  display: flex;
+  justify-content: space-between;
   align-items: center;
   height: 80px;
   position: relative;
+  gap: 16px;
 }
 
 .nav-brand {
@@ -287,7 +290,8 @@ onUnmounted(() => window.removeEventListener('click', onClickOutside))
 .nav-center {
   display: flex;
   justify-content: center;
-  gap: 32px;
+  gap: 16px;
+  flex: 1;
 }
 
 .nav-right {

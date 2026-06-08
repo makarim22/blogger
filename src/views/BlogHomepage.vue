@@ -82,7 +82,13 @@ const curatedCollections = computed(() => {
 
 <template>
   <div class="homepage animate-fade-in">
-    <div v-if="loadingMovies || loadingBooks" class="loading">Loading archives...</div>
+    <div v-if="loadingMovies || loadingBooks" class="loading-skeletons container">
+      <!-- Skeleton Hero -->
+      <div class="skeleton-hero skeleton"></div>
+      <div class="skeleton-grid">
+        <div class="skeleton-card skeleton" v-for="i in 6" :key="i"></div>
+      </div>
+    </div>
     
     <template v-else-if="heroPick">
       <!-- Hero Section (Nocturnal Odyssey) -->
@@ -112,7 +118,7 @@ const curatedCollections = computed(() => {
               v-for="item in innerCircle" 
               :key="item.id" 
               :to="`/review/${item.type}/${item.id}`"
-              class="inner-card"
+              class="inner-card hover-lift"
             >
               <div class="inner-card-content">
                 <span class="category-tag">{{ item.type === 'movies' ? 'Cinema' : 'Literature' }}</span>
@@ -147,7 +153,7 @@ const curatedCollections = computed(() => {
               v-for="item in collection.items" 
               :key="item.id" 
               :to="`/review/${item.type}/${item.id}`"
-              class="collection-card"
+              class="collection-card hover-lift"
             >
               <div class="card-image collection-image">
                 <img v-if="item.image" :src="item.image" :alt="item.displayTitle" />
@@ -172,7 +178,7 @@ const curatedCollections = computed(() => {
             v-for="item in gridReviews" 
             :key="item.id" 
             :to="`/review/${item.type}/${item.id}`"
-            class="article-card"
+            class="article-card hover-lift"
           >
             <div class="card-image">
               <img v-if="item.image" :src="item.image" :alt="item.displayTitle" />
@@ -511,6 +517,26 @@ const curatedCollections = computed(() => {
   font-style: italic;
   font-size: 1.5rem;
 }
+
+/* Skeletons */
+.loading-skeletons {
+  padding-top: 40px;
+}
+.skeleton-hero {
+  height: 60vh;
+  width: 100%;
+  margin-bottom: 40px;
+}
+.skeleton-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 50px 40px;
+}
+.skeleton-card {
+  height: 300px;
+  width: 100%;
+}
+
 
 /* Collections Section */
 .collections-section {

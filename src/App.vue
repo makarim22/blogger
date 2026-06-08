@@ -36,12 +36,16 @@ const route = useRoute()
 
 .fade-enter-active,
 .fade-leave-active {
-  transition: opacity 0.3s ease, transform 0.3s ease;
+  transition: opacity 0.5s cubic-bezier(0.25, 1, 0.5, 1), transform 0.5s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
-.fade-enter-from,
+.fade-enter-from {
+  opacity: 0;
+  transform: translateY(15px) scale(0.98);
+}
+
 .fade-leave-to {
   opacity: 0;
-  transform: translateY(10px);
+  transform: translateY(-15px) scale(0.98);
 }
 </style>

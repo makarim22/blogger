@@ -190,12 +190,19 @@ const saveQuote = () => {
   window.getSelection()?.removeAllRanges()
 }
 
+const scrollY = ref(0)
+const handleScroll = () => {
+  scrollY.value = window.scrollY
+}
+
 onMounted(() => {
   document.addEventListener('selectionchange', handleSelection)
+  window.addEventListener('scroll', handleScroll, { passive: true })
 })
 
 onUnmounted(() => {
   document.removeEventListener('selectionchange', handleSelection)
+  window.removeEventListener('scroll', handleScroll)
   window.speechSynthesis.cancel()
 })
 
@@ -233,7 +240,7 @@ useHead({
     </Transition>
 
     <header class="review-header" v-show="!isFocusMode">
-      <div class="hero-image-container">
+      <div class="hero-image-container" :style="{ transform: `translateY(${scrollY * 0.4}px)` }">
         <!-- Ambient Glow Layer -->
         <img v-if="processedItem.image" :src="processedItem.image" alt="" class="hero-glow" />
         <!-- Main Image -->
@@ -355,12 +362,11 @@ useHead({
 
 .hero-image-container {
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 0; /* Fix: was -1, causing image to hide behind background */
-  background-color: var(--color-bg); /* Use bg color to blend */
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  z-index: 0;
+  background-color: var(--color-bg);
+  will-change: transform;
   overflow: hidden;
 }
 
@@ -510,25 +516,68 @@ useHead({
   transition: all 0.5s ease;
 }
 
-.editorial-content :deep(p) {
-  margin-bottom: 1.5em;
+/* Review Body Enhancements */
+:deep(.prose) {
+  font-family: var(--font-serif);
+  font-size: 1.15rem;
+  line-height: 1.9;
+  color: var(--color-text-main);
 }
-.editorial-content :deep(h1), .editorial-content :deep(h2), .editorial-content :deep(h3) {
+
+:deep(.prose p) {
+  margin-bottom: 1.8em;
+  font-size: 1.15rem;
+}
+
+/* Beautiful drop cap for the first paragraph */
+:deep(.prose > p:first-of-type::first-letter) {
+  font-size: 4rem;
+  float: left;
+  line-height: 1;
+  padding-right: 12px;
+  padding-top: 4px;
+  font-weight: 700;
+  color: var(--color-accent);
+}
+
+:deep(.prose h2) {
   font-family: var(--font-sans);
-  margin-top: 1.5em;
+  font-size: 1.8rem;
+  margin-top: 2.5em;
+  margin-bottom: 1em;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid var(--color-border);
+  padding-bottom: 0.5em;
+}
+
+:deep(.prose h3) {
+  font-size: 1.5rem;
+  margin-top: 2em;
+  margin-bottom: 0.8em;
+  font-style: italic;
+}
+
+:deep(.prose blockquote) {
+  border-left: 3px solid var(--color-accent);
+  padding: 1em 0 1em 1.5em;
+  margin: 2em 0;
+  font-style: italic;
+  font-size: 1.25rem;
+  color: var(--color-text-muted);
+  background: linear-gradient(90deg, rgba(var(--color-surface-rgb, 255, 255, 255), 0.03) 0%, transparent 100%);
+}
+
+:deep(.prose ul) {
+  margin-bottom: 2em;
+  padding-left: 1.5em;
+  list-style-type: square;
+}
+
+:deep(.prose li) {
   margin-bottom: 0.5em;
 }
-.editorial-content :deep(ul), .editorial-content :deep(ol) {
-  margin-bottom: 1.5em;
-  padding-left: 20px;
-}
-.editorial-content :deep(blockquote) {
-  border-left: 4px solid var(--color-accent);
-  padding-left: 16px;
-  font-style: italic;
-  color: var(--color-text-muted);
-  margin: 1.5em 0;
-}
+
 .editorial-content :deep(a) {
   color: var(--color-accent);
   text-decoration: underline;

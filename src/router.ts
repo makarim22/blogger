@@ -1,5 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import BlogHomepage from './views/BlogHomepage.vue'
+import ForYouView from './views/ForYouView.vue'
+import PostPage from './views/PostPage.vue'
 import CategoryPage from './views/CategoryPage.vue'
 import ReviewDetail from './views/ReviewDetail.vue'
 import LoginView from './views/LoginView.vue'
@@ -40,6 +42,16 @@ const router = createRouter({
       path: '/',
       name: 'home',
       component: BlogHomepage
+    },
+    {
+      path: '/for-you',
+      name: 'for-you',
+      component: ForYouView
+    },
+    {
+      path: '/post/:id',
+      name: 'post',
+      component: PostPage
     },
     {
       path: '/movies',

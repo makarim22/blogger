@@ -112,14 +112,22 @@ onUnmounted(() => {
 
       <!-- Main Content Grid -->
       <main class="main-content">
-        <div v-if="isLoading" class="loading">Retrieving archives...</div>
+        <div v-if="isLoading" class="article-grid">
+          <div v-for="n in 8" :key="'skel'+n" class="article-card">
+            <div class="card-image skeleton"></div>
+            <div class="card-content">
+              <div class="skeleton-title skeleton"></div>
+              <div class="skeleton-subtitle skeleton" style="margin-top: 8px; width: 60%;"></div>
+            </div>
+          </div>
+        </div>
         
         <div v-else-if="processedItems.length === 0" class="empty-state">
           <p>No records found matching your criteria.</p>
         </div>
         
         <div v-else>
-          <div class="article-grid">
+          <TransitionGroup name="stagger" tag="div" class="article-grid">
             <RouterLink 
               v-for="item in paginatedItems" 
               :key="item.id" 
@@ -143,7 +151,7 @@ onUnmounted(() => {
                 <p class="card-score">Score: {{ (item as any).rating }}/10</p>
               </div>
             </RouterLink>
-          </div>
+          </TransitionGroup>
         </div>
         
         <!-- Infinite Scroll Observer Target -->
@@ -304,5 +312,29 @@ onUnmounted(() => {
 
 @keyframes spin {
   to { transform: rotate(360deg); }
+}
+
+.stagger-enter-active,
+.stagger-leave-active {
+  transition: all 0.5s ease;
+}
+.stagger-enter-from,
+.stagger-leave-to {
+  opacity: 0;
+  transform: translateY(20px);
+}
+.stagger-leave-active {
+  position: absolute;
+}
+
+.skeleton-title {
+  height: 24px;
+  width: 80%;
+  border-radius: 4px;
+}
+.skeleton-subtitle {
+  height: 16px;
+  width: 60%;
+  border-radius: 4px;
 }
 </style>

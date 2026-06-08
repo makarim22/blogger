@@ -5,6 +5,7 @@
     :alt="title || 'Movie Poster'" 
     @error="handleImageError"
     :class="customClass"
+    loading="lazy"
   />
   <div v-else :class="['fallback-poster', customClass]">
     <span v-if="loading">Loading...</span>

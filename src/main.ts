@@ -7,6 +7,9 @@ import { createPinia } from 'pinia'
 import { VueQueryPlugin } from '@tanstack/vue-query'
 import Vue3Toastify, { type ToastContainerOptions } from 'vue3-toastify'
 import { createHead } from '@unhead/vue/client'
+import { registerSW } from 'virtual:pwa-register'
+
+registerSW({ immediate: true })
 
 const app = createApp(App)
 const pinia = createPinia()

@@ -24,7 +24,7 @@ const formatDate = (dateString: string) => {
         :title="item.title" 
         customClass="media-image" 
       />
-      <img v-else-if="item.type === 'book' && item.coverUrl" :src="item.coverUrl" class="media-image" />
+      <img v-else-if="item.type === 'book' && item.coverUrl" :src="item.coverUrl" class="media-image" loading="lazy" />
       <div v-else class="media-image fallback">No Cover</div>
       <div class="rating-badge" v-if="item.rating">★ {{ item.rating }}/10</div>
     </div>

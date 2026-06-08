@@ -129,7 +129,7 @@ const curatedCollections = computed(() => {
                 <div class="star-rating">{{ renderStars(item.rating) }}</div>
               </div>
               <div class="inner-card-image">
-                <img v-if="item.image" :src="item.image" :alt="item.displayTitle" />
+                <img v-if="item.image" :src="item.image" :alt="item.displayTitle" loading="lazy" />
                 <div v-else class="placeholder-img-dark"></div>
               </div>
             </RouterLink>
@@ -156,7 +156,7 @@ const curatedCollections = computed(() => {
               class="collection-card hover-lift"
             >
               <div class="card-image collection-image">
-                <img v-if="item.image" :src="item.image" :alt="item.displayTitle" />
+                <img v-if="item.image" :src="item.image" :alt="item.displayTitle" loading="lazy" />
                 <div v-else class="placeholder-img"></div>
               </div>
               <div class="card-content">
@@ -181,7 +181,7 @@ const curatedCollections = computed(() => {
             class="article-card hover-lift"
           >
             <div class="card-image">
-              <img v-if="item.image" :src="item.image" :alt="item.displayTitle" />
+              <img v-if="item.image" :src="item.image" :alt="item.displayTitle" loading="lazy" />
               <div v-else class="placeholder-img"></div>
             </div>
             <div class="card-content">
@@ -207,7 +207,7 @@ const curatedCollections = computed(() => {
           <div class="roulette-box" v-if="rouletteItem">
             <div class="roulette-card" :class="{ 'is-blurred': !isRevealed, 'is-spinning': isSpinning }">
               <div class="roulette-image">
-                <img v-if="rouletteItem.image" :src="rouletteItem.image" alt="Mystery Cover" />
+                <img v-if="rouletteItem.image" :src="rouletteItem.image" alt="Mystery Cover" loading="lazy" />
               </div>
               <div class="roulette-overlay" v-if="!isRevealed">
                 <span>?</span>

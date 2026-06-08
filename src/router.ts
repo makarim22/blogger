@@ -1,22 +1,23 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import BlogHomepage from './views/BlogHomepage.vue'
-import ForYouView from './views/ForYouView.vue'
-import PostPage from './views/PostPage.vue'
-import CategoryPage from './views/CategoryPage.vue'
-import ReviewDetail from './views/ReviewDetail.vue'
-import LoginView from './views/LoginView.vue'
-import StatsView from './views/StatsView.vue'
-import WriteReviewPage from './views/WriteReviewPage.vue'
-import ProfileView from './views/ProfileView.vue'
-import TimelineView from './views/TimelineView.vue'
-import AboutView from './views/AboutView.vue'
-import PrivacyView from './views/PrivacyView.vue'
-import TermsView from './views/TermsView.vue'
-import GuidelinesView from './views/GuidelinesView.vue'
-import RedStringBoard from './views/RedStringBoard.vue'
-import VsModeView from './views/VsModeView.vue'
-import AuthCallback from './views/AuthCallback.vue'
-import AdminDashboard from './views/AdminDashboard.vue'
+// Lazy loaded views
+const BlogHomepage = () => import('./views/BlogHomepage.vue')
+const ForYouView = () => import('./views/ForYouView.vue')
+const PostPage = () => import('./views/PostPage.vue')
+const CategoryPage = () => import('./views/CategoryPage.vue')
+const ReviewDetail = () => import('./views/ReviewDetail.vue')
+const LoginView = () => import('./views/LoginView.vue')
+const StatsView = () => import('./views/StatsView.vue')
+const WriteReviewPage = () => import('./views/WriteReviewPage.vue')
+const ProfileView = () => import('./views/ProfileView.vue')
+const TimelineView = () => import('./views/TimelineView.vue')
+const AboutView = () => import('./views/AboutView.vue')
+const PrivacyView = () => import('./views/PrivacyView.vue')
+const TermsView = () => import('./views/TermsView.vue')
+const GuidelinesView = () => import('./views/GuidelinesView.vue')
+const RedStringBoard = () => import('./views/RedStringBoard.vue')
+const VsModeView = () => import('./views/VsModeView.vue')
+const AuthCallback = () => import('./views/AuthCallback.vue')
+const AdminDashboard = () => import('./views/AdminDashboard.vue')
 
 // Auth guard for editor-only routes
 const requireAuth = (_to: any, _from: any, next: Function) => {

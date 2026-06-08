@@ -2,6 +2,7 @@
 import { ref, onMounted } from 'vue'
 import { fetchRecommendations, type RecommendationItem } from '../services/recommendation.service'
 import RecommendationCard from '../components/RecommendationCard.vue'
+import SkeletonCard from '../components/SkeletonCard.vue'
 
 const items = ref<RecommendationItem[]>([])
 const loading = ref(true)
@@ -25,9 +26,8 @@ onMounted(async () => {
       <p class="subtitle">Personalized recommendations based on what you love.</p>
     </header>
 
-    <div v-if="loading" class="loading-state">
-      <div class="loader"></div>
-      <p>Curating your feed...</p>
+    <div v-if="loading" class="feed-grid">
+      <SkeletonCard v-for="n in 6" :key="n" type="mixed" />
     </div>
     
     <div v-else-if="error" class="error-state">
@@ -38,13 +38,13 @@ onMounted(async () => {
       No recommendations available right now. Explore the site to build your profile!
     </div>
 
-    <div v-else class="feed-grid">
+    <TransitionGroup v-else name="stagger" tag="div" class="feed-grid">
       <RecommendationCard 
         v-for="item in items" 
         :key="item.type + '-' + item.id" 
         :item="item" 
       />
-    </div>
+    </TransitionGroup>
   </div>
 </template>
 
@@ -89,19 +89,17 @@ onMounted(async () => {
   font-size: 1.2rem;
 }
 
-.loader {
-  border: 4px solid rgba(255, 255, 255, 0.1);
-  border-top: 4px solid var(--color-primary);
-  border-radius: 50%;
-  width: 40px;
-  height: 40px;
-  animation: spin 1s linear infinite;
-  margin: 0 auto 16px;
+.stagger-enter-active,
+.stagger-leave-active {
+  transition: all 0.5s ease;
 }
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+.stagger-enter-from,
+.stagger-leave-to {
+  opacity: 0;
+  transform: translateY(20px);
+}
+.stagger-leave-active {
+  position: absolute;
 }
 
 @media (max-width: 768px) {

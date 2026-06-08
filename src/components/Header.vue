@@ -5,6 +5,7 @@ import { useAuthStore } from '../stores/auth'
 import { toast } from 'vue3-toastify'
 import { useTheme } from '../composables/useTheme'
 import GlobalSearch from './GlobalSearch.vue'
+import NotificationBell from './NotificationBell.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -160,6 +161,9 @@ onUnmounted(() => window.removeEventListener('click', onClickOutside))
             <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
           </svg>
         </button>
+
+        <!-- Notifications -->
+        <NotificationBell />
 
         <!-- Write Dropdown (Editor only) -->
         <div v-if="authStore.isLoggedIn" class="editor-menu-container">

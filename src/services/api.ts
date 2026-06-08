@@ -354,3 +354,29 @@ export const toggleSaveBook = async (id: string): Promise<any> => {
   checkResponse(res, 'Failed to save book');
   return res.json();
 };
+
+export const fetchNotifications = async (): Promise<any[]> => {
+  const res = await fetch(`${API_URL}/notifications`, {
+    headers: getHeaders(),
+  });
+  checkResponse(res, 'Failed to fetch notifications');
+  return res.json();
+};
+
+export const markNotificationAsRead = async (id: string): Promise<any> => {
+  const res = await fetch(`${API_URL}/notifications/${id}/read`, {
+    method: 'PATCH',
+    headers: getHeaders(),
+  });
+  checkResponse(res, 'Failed to mark notification as read');
+  return res.json();
+};
+
+export const markAllNotificationsAsRead = async (): Promise<any> => {
+  const res = await fetch(`${API_URL}/notifications/read-all`, {
+    method: 'PATCH',
+    headers: getHeaders(),
+  });
+  checkResponse(res, 'Failed to mark all notifications as read');
+  return res.json();
+};
